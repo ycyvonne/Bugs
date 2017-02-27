@@ -61,7 +61,7 @@ EnergyHolder::EnergyHolder(int id, StudentWorld* sw,
              int imageID, int startX, int startY, Direction dir, int depth)
 :Actor(id, imageID, startX, startY, dir, depth)
 {
-    
+    m_world = sw;
 }
 
 bool EnergyHolder::isDead() const{
