@@ -88,11 +88,15 @@ void EnergyHolder::decreaseUnits(int units)
     m_units -= units;
 }
 
-void EnergyHolder::updateStatus()
+bool EnergyHolder::updateStatus()
 {
     decreaseUnits(1);
-    if(isDead())
+    if(isDead()){
         killMe();
+        return true;
+    }
+    
+    return false;
 }
 
 
@@ -260,7 +264,8 @@ void Insect::stun()
 
 void Insect::doSomething()
 {
-    updateStatus();
+    if(updateStatus()) //if died, return immediately
+        return;
     
     if(m_stunnedTicksRemaining > 0)
     {
@@ -268,9 +273,7 @@ void Insect::doSomething()
         return;
     }
     m_stunnedTicksRemaining = 2;
-    
-    cout << "do something id " << id() << endl;
-    
+        
     //movement & death related
     doesAction();
     

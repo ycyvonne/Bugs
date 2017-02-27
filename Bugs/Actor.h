@@ -13,7 +13,6 @@ class Food;
 class Actor: public GraphObject{
 public:
     Actor(int id, int imageID, int startX, int startY, Direction dir, int depth);
-    
     virtual void doSomething() {}
     
     //accessors
@@ -21,10 +20,9 @@ public:
     int     id() const;         //from the unique ID produced at the start
     bool    isInsect() const;  //is biteable, stunnable, and poisonable
     
+protected:
     //mutators
     void setRandomDir();
-    
-protected:
     void setAsInsect();
     
     
@@ -62,7 +60,7 @@ protected:
     
     //mutators
     void moveMeTo(int x, int y);
-    void updateStatus(); //decrease unit and check death
+    bool updateStatus(); //decrease unit and check death
     void killMe();
     void spawnAdultGrasshopper(int x, int y, int health);
     
@@ -95,6 +93,7 @@ public:
     virtual void doSomething();
 
 private:
+    
     
 };
 
