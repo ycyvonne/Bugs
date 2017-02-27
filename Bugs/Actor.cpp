@@ -99,7 +99,6 @@ bool EnergyHolder::updateStatus()
     return false;
 }
 
-
 bool EnergyHolder::isBlocked(int x, int y) const{
     return m_world->isBlocked(x, y);
 }
@@ -140,9 +139,14 @@ void EnergyHolder::killMe()
     m_world->killActor(id(), getX(), getY());
 }
 
-void EnergyHolder::spawnAdultGrasshopper(int x, int y, int health)
+void EnergyHolder::spawnAdultGrasshopper(int x, int y)
 {
-    m_world->spawnAdultGrasshopper(x, y, health);
+    m_world->spawnAdultGrasshopper(x, y);
+}
+
+bool EnergyHolder::hasEnemy(int x, int y, int colony, EnergyHolder*& a)
+{
+    return m_world->hasEnemy(x, y, colony, a);
 }
 
 //==============[ Actor > Pebble ]====================================
@@ -250,7 +254,7 @@ void Poison::doSomething()
 Insect::Insect(int id, StudentWorld* sw,
                int imageID, int startX, int startY,
                Direction dir, int startingHealth, int stuns)
-        :EnergyHolder(id, sw, imageID, startX, startY, dir, 2)
+        :EnergyHolder(id, sw, imageID, startX, startY, dir, 1)
 {
     setUnits(startingHealth);
     m_stunnedTicksRemaining = stuns;
@@ -349,22 +353,32 @@ void Grasshopper::move()
     }
 }
 
+bool Grasshopper::makeChecks()
+{
+    if(distance() <= 0)
+    {
+        setRandomDir();
+        setRandomDistance();
+        return false;
+    }
+    
+    return true;
+}
+
 
 //=========[ Actor > EnergyHolder > Insect > Grasshopper > BabyGrasshopper ]========
 //sets imageID, health = 500
 BabyGrasshopper::BabyGrasshopper(int id, StudentWorld *sw, int startX, int startY)
         :Grasshopper(id, sw, IID_BABY_GRASSHOPPER, startX, startY, 500)
-{ cout << "init baby grasshopper" << endl;}
+{}
 
 void BabyGrasshopper::doesAction()
 {
     if(units() >= 1600)
     {
         //create adult
-        //AdultGrasshopper(getX(), getY(), 1, health());
         cout << "creating adult " << endl;
-        
-        spawnAdultGrasshopper(getX(), getY(), units());
+        spawnAdultGrasshopper(getX(), getY());
         killMe();
         return;
     }
@@ -382,31 +396,53 @@ void BabyGrasshopper::doesAction()
     
 }
 
-bool BabyGrasshopper::makeChecks()
-{
-    if(distance() <= 0)
-    {
-        setRandomDir();
-        setRandomDistance();
-        return false;
-    }
-    
-    return true;
-}
-
 //=======[ Actor > EnergyHolder > Insect > Grasshopper > AdultGrasshopper ]========
-AdultGrasshopper::AdultGrasshopper(int id, StudentWorld* sw, int startX, int startY, int health)
-        :Grasshopper(id, sw, IID_ADULT_GRASSHOPPER, startX, startY, health)
+AdultGrasshopper::AdultGrasshopper(int id, StudentWorld* sw, int startX, int startY)
+        :Grasshopper(id, sw, IID_ADULT_GRASSHOPPER, startX, startY, 1600)
 {
     move();
 }
 
+#include <cmath>
 void AdultGrasshopper::doesAction()
 {
+    int randTwo = rand() % 2;
+    int randThree = rand() % 3;
+    int randTen = rand() % 10;
+    
+    if(randThree == 0) //0.33 chance
+    {
+        //check enemy on square
+        //if there, choose one random
+        //bite => -50 HP
+        
+        EnergyHolder *e;
+        if(hasEnemy(getX(), getY(), -1, e))
+        {
+            e->decreaseUnits(50);
+        }
+    }
+    else if(randTen == 0) //0.1 chance
+    {
+        //select square in 10 square radius using cos(), sin()
+        int randRadius = rand() % 10 + 1;
+        int randRadians = (rand() % 360) * 3.1415926535 / 180;
+        
+        int x = getX() + randRadius * cos(randRadians);
+        int y = getY() + randRadius * sin(randRadians);
+        
+        //move if within bounds and not blocked by rock
+        if(!isBlocked(x, y) && x > 0 && y > 0 && x < VIEW_WIDTH && y < VIEW_HEIGHT)
+            moveMeTo(x, y);
+    }
+    else if(!(attemptToEat() && randTwo == 0))
+    {
+        //if attempt to eat failed or attempt to eat successed & 50% chance
+        move();
+        return;
+    }
+    
+    stun();
     
 }
 
-bool AdultGrasshopper::makeChecks()
-{
-    return false;
-}

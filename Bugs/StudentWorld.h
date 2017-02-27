@@ -30,12 +30,14 @@ public:
     void killActor(int id, int x, int y);
     void setFlag(int x, int y);
     void resetFlag();
-    void spawnAdultGrasshopper(int x, int y, int health);
+    void spawnAdultGrasshopper(int x, int y);
     
     bool isBlocked(int x, int y);
-    bool hasFood(int x, int y, Food*& a);
     bool moveActor(int id, int xStart, int yStart, int xEnd, int yEnd);
     bool winningAntExists();
+    
+    bool hasFood(int x, int y, Food*& a);
+    bool hasEnemy(int x, int y, int colony, EnergyHolder*& a);
 
 private:
     mmap m_map;

@@ -54,7 +54,12 @@ public:
     bool    isDead() const;
     bool    isBlocked(int x, int y) const; //looks into m_world to determine if a rock is blocking
     bool    hasFood(int x, int y, Food*& a);
-
+    bool    hasEnemy(int x, int y, int colony, EnergyHolder*& e);
+    
+    //mutators
+    void setUnits(int units);
+    void addUnits(int units);
+    void decreaseUnits(int units);
 
 protected:
     
@@ -62,11 +67,7 @@ protected:
     void moveMeTo(int x, int y);
     bool updateStatus(); //decrease unit and check death
     void killMe();
-    void spawnAdultGrasshopper(int x, int y, int health);
-    
-    void setUnits(int units);
-    void addUnits(int units);
-    void decreaseUnits(int units);
+    void spawnAdultGrasshopper(int x, int y);
     
     
 private:
@@ -160,8 +161,8 @@ public:
     
     //mutators
     virtual void doesAction() {}
-    virtual bool makeChecks() {return false;} //if makeChecks returns true, grasshopper will move
     virtual void move();
+    bool makeChecks(); //if makeChecks returns true, grasshopper will move
     
     void setRandomDistance();
     
@@ -181,18 +182,16 @@ public:
     
     //mutators
     virtual void doesAction();
-    virtual bool makeChecks();
 private:
     
 };
 
 class AdultGrasshopper: public Grasshopper{
 public:
-    AdultGrasshopper(int id, StudentWorld* sw, int startX, int startY, int health);
+    AdultGrasshopper(int id, StudentWorld* sw, int startX, int startY);
     
     //mutators
     virtual void doesAction();
-    virtual bool makeChecks();
 private:
     
 };

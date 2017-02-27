@@ -185,21 +185,6 @@ bool StudentWorld::isBlocked(int x, int y)
     return false;
 }
 
-bool StudentWorld::hasFood(int x, int y, Food*& a)
-{
-    indexPair index (x, y);
-    mmap::iterator it;
-    for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
-        if(it->second->type() == IID_FOOD){
-            a = dynamic_cast<Food*>(it->second);
-            if(a == nullptr) cout << "dynamic cast failed" << endl;
-            return true;
-        }
-    }
-    
-    return false;
-}
-
 void StudentWorld::killActor(int id, int x, int y)
 {
     removeActor(true, id, x, y);
@@ -248,14 +233,44 @@ bool StudentWorld::moveActor(int id, int xStart, int yStart, int xEnd, int yEnd)
     return false;
 }
 
-void StudentWorld::spawnAdultGrasshopper(int x, int y, int health)
+void StudentWorld::spawnAdultGrasshopper(int x, int y)
 {
-    Actor* a = new AdultGrasshopper(m_currentUniqueId++, this, x, y, health);
+    Actor* a = new AdultGrasshopper(m_currentUniqueId++, this, x, y);
     insertActor(a, x, y);
 }
 
 
 //TODO: complete this
 bool StudentWorld::winningAntExists(){
+    return false;
+}
+
+bool StudentWorld::hasFood(int x, int y, Food*& a)
+{
+    indexPair index (x, y);
+    mmap::iterator it;
+    for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
+        if(it->second->type() == IID_FOOD){
+            a = dynamic_cast<Food*>(it->second);
+            if(a == nullptr) cout << "dynamic cast failed" << endl;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+bool StudentWorld::hasEnemy(int x, int y, int colony, EnergyHolder*& a)
+{
+    indexPair index (x, y);
+    mmap::iterator it;
+    for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
+        Actor* cur = it->second;
+        if(colony == -1 && cur->isInsect()) //grasshoppers & ants
+        {
+            a = dynamic_cast<EnergyHolder*>(cur);
+            return true;
+        }
+    }
     return false;
 }
