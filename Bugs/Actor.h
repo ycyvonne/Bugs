@@ -53,10 +53,14 @@ public:
     int     units() const;
     bool    isDead() const;
     bool    isBlocked(int x, int y) const; //looks into m_world to determine if a rock is blocking
-    bool    hasFood(int x, int y, Food*& a);
     bool    hasEnemy(int x, int y, int colony, EnergyHolder*& e);
     
+    
+    bool hasFood(int x, int y, Food*& f);
+    void addFood(int x, int y);
+    
     //mutators
+    
     void setUnits(int units);
     void addUnits(int units);
     void decreaseUnits(int units);
@@ -68,7 +72,7 @@ protected:
     bool updateStatus(); //decrease unit and check death
     void killMe();
     void spawnAdultGrasshopper(int x, int y);
-    
+    void stunAll(int x, int y);
     
 private:
     StudentWorld* m_world;
@@ -152,6 +156,7 @@ public:
     
 private:
     int m_stunnedTicksRemaining;
+    bool m_stunned;
 };
 
 class Grasshopper: public Insect{

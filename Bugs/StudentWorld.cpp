@@ -89,6 +89,9 @@ int StudentWorld::init()
                 case Field::food:
                     m_map.insert(mmapPair(index, new Food(m_currentUniqueId++, this, i, j, false)));
                     break;
+                case Field::water:
+                    m_map.insert(mmapPair(index, new Pool(m_currentUniqueId++, this, i, j)));
+                    break;
                 case Field::anthill0:
                     anthill = 0;
                 case Field::anthill1:
@@ -239,10 +242,33 @@ void StudentWorld::spawnAdultGrasshopper(int x, int y)
     insertActor(a, x, y);
 }
 
+void StudentWorld::stunAll(int x, int y)
+{    
+    indexPair index (x, y);
+    mmap::iterator it;
+    for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
+        if(it->second->isInsect()){
+            static_cast<Insect*>(it->second)->stun();
+        }
+    }
+}
 
 //TODO: complete this
 bool StudentWorld::winningAntExists(){
     return false;
+}
+
+void StudentWorld::addFood(int x, int y)
+{
+    Food *f;
+    if(hasFood(x, y, f))
+    {
+        f->addCarcass();
+    }
+    else
+    {
+        insertActor(new Food(m_currentUniqueId++, this, x, y, true), x, y);
+    }
 }
 
 bool StudentWorld::hasFood(int x, int y, Food*& a)
@@ -251,8 +277,7 @@ bool StudentWorld::hasFood(int x, int y, Food*& a)
     mmap::iterator it;
     for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
         if(it->second->type() == IID_FOOD){
-            a = dynamic_cast<Food*>(it->second);
-            if(a == nullptr) cout << "dynamic cast failed" << endl;
+            a = static_cast<Food*>(it->second);
             return true;
         }
     }
@@ -268,7 +293,7 @@ bool StudentWorld::hasEnemy(int x, int y, int colony, EnergyHolder*& a)
         Actor* cur = it->second;
         if(colony == -1 && cur->isInsect()) //grasshoppers & ants
         {
-            a = dynamic_cast<EnergyHolder*>(cur);
+            a = static_cast<EnergyHolder*>(cur);
             return true;
         }
     }

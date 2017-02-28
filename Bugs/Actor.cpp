@@ -103,9 +103,14 @@ bool EnergyHolder::isBlocked(int x, int y) const{
     return m_world->isBlocked(x, y);
 }
 
-bool EnergyHolder::hasFood(int x, int y, Food*& a)
+void EnergyHolder::addFood(int x, int y)
 {
-    return m_world->hasFood(x, y, a);
+    m_world->addFood(x, y);
+}
+
+bool EnergyHolder::hasFood(int x, int y, Food*& f)
+{
+    return m_world->hasFood(x, y, f);
 }
 
 void EnergyHolder::moveMeTo(int x, int y)
@@ -130,6 +135,8 @@ void EnergyHolder::killMe()
         cout << "food." << endl;
     else if(type() == IID_BABY_GRASSHOPPER)
         cout << "baby grasshopper." << endl;
+    else if(type() == IID_ADULT_GRASSHOPPER)
+        cout << "adult grasshopper." << endl;
     
     //update display
     setVisible(false);
@@ -147,6 +154,11 @@ void EnergyHolder::spawnAdultGrasshopper(int x, int y)
 bool EnergyHolder::hasEnemy(int x, int y, int colony, EnergyHolder*& a)
 {
     return m_world->hasEnemy(x, y, colony, a);
+}
+
+void EnergyHolder::stunAll(int x, int y)
+{
+    m_world->stunAll(x, y);
 }
 
 //==============[ Actor > Pebble ]====================================
@@ -228,8 +240,7 @@ Pool::Pool(int id, StudentWorld* sw, int startX, int startY)
 
 void Pool::doSomething()
 {
-    //TODO
-    //stun all insects on square
+    stunAll(getX(), getY());
 }
 
 
@@ -259,11 +270,16 @@ Insect::Insect(int id, StudentWorld* sw,
     setUnits(startingHealth);
     m_stunnedTicksRemaining = stuns;
     setAsInsect();
+    m_stunned = false;
 }
 
 void Insect::stun()
 {
-    m_stunnedTicksRemaining = 2;
+    if(!m_stunned){ //prevent multiple stuns by same
+        m_stunnedTicksRemaining = 2;
+    }
+    
+    m_stunned = true;
 }
 
 void Insect::doSomething()
@@ -276,6 +292,8 @@ void Insect::doSomething()
         m_stunnedTicksRemaining--;
         return;
     }
+
+    m_stunned = false;
     m_stunnedTicksRemaining = 2;
         
     //movement & death related
@@ -379,6 +397,7 @@ void BabyGrasshopper::doesAction()
         //create adult
         cout << "creating adult " << endl;
         spawnAdultGrasshopper(getX(), getY());
+        addFood(getX(), getY());
         killMe();
         return;
     }
