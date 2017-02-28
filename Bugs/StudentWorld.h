@@ -32,6 +32,7 @@ public:
     void resetFlag();
     void spawnAdultGrasshopper(int x, int y);
     void stunAll(int x, int y);
+    void poisonAll(int x, int y);
     
     bool isBlocked(int x, int y);
     bool moveActor(int id, int xStart, int yStart, int xEnd, int yEnd);

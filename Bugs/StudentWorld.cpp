@@ -92,6 +92,9 @@ int StudentWorld::init()
                 case Field::water:
                     m_map.insert(mmapPair(index, new Pool(m_currentUniqueId++, this, i, j)));
                     break;
+                case Field::poison:
+                    m_map.insert(mmapPair(index, new Poison(m_currentUniqueId++, this, i, j)));
+                    break;
                 case Field::anthill0:
                     anthill = 0;
                 case Field::anthill1:
@@ -249,6 +252,17 @@ void StudentWorld::stunAll(int x, int y)
     for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
         if(it->second->isInsect()){
             static_cast<Insect*>(it->second)->stun();
+        }
+    }
+}
+
+void StudentWorld::poisonAll(int x, int y)
+{
+    indexPair index (x, y);
+    mmap::iterator it;
+    for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
+        if(it->second->isInsect()){
+            static_cast<Insect*>(it->second)->poison();
         }
     }
 }

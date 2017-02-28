@@ -73,6 +73,7 @@ protected:
     void killMe();
     void spawnAdultGrasshopper(int x, int y);
     void stunAll(int x, int y);
+    void poisonAll(int x, int y);
     
 private:
     StudentWorld* m_world;
@@ -148,7 +149,11 @@ public:
     //mean to be overriden in subclasses
     virtual void doesAction() {}
     
+    //accessors
+    bool isPoisoned();
+    
     //mutators
+    void poison();
     void getHungrier();
     bool attemptToEat();
     void stun();

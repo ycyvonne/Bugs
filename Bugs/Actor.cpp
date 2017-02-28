@@ -161,6 +161,11 @@ void EnergyHolder::stunAll(int x, int y)
     m_world->stunAll(x, y);
 }
 
+void EnergyHolder::poisonAll(int x, int y)
+{
+    m_world->poisonAll(x, y);
+}
+
 //==============[ Actor > Pebble ]====================================
 //sets depth = 1
 Pebble::Pebble(int id, int startX, int startY)
@@ -249,14 +254,11 @@ void Pool::doSomething()
 
 Poison::Poison(int id, StudentWorld* sw, int startX, int startY)
     :TriggerableActor(id, sw, IID_POISON, startX, startY, right, 2)
-{
-
-}
+{}
 
 void Poison::doSomething()
 {
-    //TODO
-    //poison all insects on square
+    poisonAll(getX(), getY());
 }
 
 
@@ -280,6 +282,11 @@ void Insect::stun()
     }
     
     m_stunned = true;
+}
+
+void Insect::poison()
+{
+    decreaseUnits(150);
 }
 
 void Insect::doSomething()
