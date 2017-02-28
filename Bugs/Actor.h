@@ -87,7 +87,7 @@ public:
     
     //mutator
     void addCarcass();
-    int eat();
+    int eat(int amt);
     
 private:
     int m_food;

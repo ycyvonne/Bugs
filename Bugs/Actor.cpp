@@ -187,13 +187,13 @@ void Food::addCarcass()
     addUnits(100);
 }
 
-int Food::eat()
+int Food::eat(int amt)
 {
     int food = units();
     
-    if(food >= 200){
-        decreaseUnits(200);
-        return 200;
+    if(food >= amt){
+        decreaseUnits(amt);
+        return amt;
     }
     
     setUnits(0);
@@ -223,12 +223,28 @@ Anthill::Anthill(int id, StudentWorld* sw, Compiler* com, int colony, int startX
 {
     m_colony = colony;
     m_compiler = com;
+    setUnits(8999);
 }
 
 void Anthill::doSomething()
 {
-    decreaseUnits(1);
-    //TODO: more stuff
+    updateStatus();
+    
+    Food* food;
+    if(hasFood(getX(), getY(), food))
+    {
+        addUnits(food->eat(10000));
+    }
+    
+    //checks if enough to produce ant
+    if(units() >= 2000)
+    {
+        //add ant
+        decreaseUnits(1500);
+        
+        //increase num ants this colony has produced, var held by student world
+    }
+    
 }
 
 TriggerableActor::TriggerableActor(int id, StudentWorld* sw,
@@ -313,7 +329,7 @@ bool Insect::attemptToEat()
     Food* food;
     if(hasFood(getX(), getY(), food))
     {
-        addUnits(food->eat());
+        addUnits(food->eat(200));
         return true;
     }
     
