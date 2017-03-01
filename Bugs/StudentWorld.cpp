@@ -1,14 +1,11 @@
 #include "StudentWorld.h"
 #include "Field.h"
 #include "Actor.h"
+#include "Compiler.h"
 #include <string>
-
 
 using namespace std;
 
-class Compiler{
-    
-};
 
 GameWorld* createStudentWorld(string assetDir)
 {
@@ -65,12 +62,28 @@ int StudentWorld::init()
    // string fileName = getFieldFilename();
     string error;
     
-    if(f.loadField(fileName, error) != Field::load_success){
-        cout << error << endl;
-        return GWSTATUS_NO_WINNER;
+    if(f.loadField(fileName, error) != Field::LoadResult::load_success){
+        //cout << error << endl;
+        setError(fileName + " " + error);
+        return false;
     }
     
-    Compiler* c = new Compiler;
+    vector<string> fileNames = getFilenamesOfAntPrograms();
+    Compiler* compilers[4];
+    string cError;
+    
+    for(int i = 0; i < 4; i++)
+    {
+        compilers[i] = new Compiler;
+       /* if (!compilers[i]->compile(fileNames[i], cError))
+        {
+            setError(fileNames[i] + " " + cError);
+            return GWSTATUS_LEVEL_ERROR;
+        }*/
+    }
+    
+    //now success, can set anthill0 compiler
+    
     
     for(int i = 0; i < VIEW_WIDTH; i++)
     {
@@ -83,28 +96,28 @@ int StudentWorld::init()
             int anthill = -1;
             switch(fItem)
             {
-                case Field::rock:
+                case Field::FieldItem::rock:
                     m_map.insert(mmapPair(index, new Pebble(m_currentUniqueId++, i, j)));
                     break;
-                case Field::food:
+                case Field::FieldItem::food:
                     m_map.insert(mmapPair(index, new Food(m_currentUniqueId++, this, i, j, false)));
                     break;
-                case Field::water:
+                case Field::FieldItem::water:
                     m_map.insert(mmapPair(index, new Pool(m_currentUniqueId++, this, i, j)));
                     break;
-                case Field::poison:
+                case Field::FieldItem::poison:
                     m_map.insert(mmapPair(index, new Poison(m_currentUniqueId++, this, i, j)));
                     break;
-                case Field::anthill0:
+                case Field::FieldItem::anthill0:
                     anthill = 0;
-                case Field::anthill1:
+                case Field::FieldItem::anthill1:
                     anthill = 1;
-                case Field::anthill2:
+                case Field::FieldItem::anthill2:
                     anthill = 2;
-                case Field::anthill3:
+                case Field::FieldItem::anthill3:
                     anthill = 3;
                     break;
-                case Field::grasshopper:
+                case Field::FieldItem::grasshopper:
                     m_map.insert(mmapPair(index, new BabyGrasshopper(m_currentUniqueId++, this, i, j)));
                     break;
                 default:
@@ -112,7 +125,7 @@ int StudentWorld::init()
             }
             
             if(anthill != -1)
-                m_map.insert(mmapPair(index, new Anthill(m_currentUniqueId++, this, c, anthill, i, j)));
+                m_map.insert(mmapPair(index, new Anthill(m_currentUniqueId++, this, compilers[anthill], anthill, i, j)));
         }
     }
     

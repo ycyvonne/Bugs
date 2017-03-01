@@ -164,6 +164,16 @@ private:
     bool m_stunned;
 };
 
+class Ant: public Insect{
+    
+public:
+    Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony);
+    virtual void doSomething();
+private:
+    int m_colony;
+    Compiler *m_compiler;
+};
+
 class Grasshopper: public Insect{
 public:
     Grasshopper(int id, StudentWorld *sw,

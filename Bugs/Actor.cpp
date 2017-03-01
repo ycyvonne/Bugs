@@ -1,5 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
+#include "Compiler.h"
 #include <iostream>
 
 using namespace std;
@@ -334,6 +335,64 @@ bool Insect::attemptToEat()
     }
     
     return false;
+}
+//========[ Actor > EnergyHolder > Insect > Ant ]======================
+
+Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony)
+    :Insect(id, sw, imageID, startX, startY, right, 1500, 0)
+{
+    setRandomDir();
+    m_colony = colony;
+    m_compiler = com;
+}
+/*
+void Ant::runCommand(const Compiler::Command& c)
+{
+    if (c.opcode == moveForward)
+        moveTheAntForward();
+    else if (c.opcode == rotateClockwise)
+        rotateTheAntClockwise();
+    else ... // and so on
+}*/
+
+void Ant::doSomething()
+{
+    Compiler::Command cmd;
+    int ic = 0; // start at the beginning of the vector
+    //for (;;) // keep running forever for now
+    //{
+    // get the command from element ic of the vector
+    if ( ! m_compiler->getCommand(ic, cmd) )
+        return; // error - no such instruction!
+    
+    switch (cmd.opcode)
+    {
+        case Compiler::Opcode::moveForward:
+            // cause the ant to move forward by
+            // updating its x,y coordinates
+            //moveTheAntForward();
+            ++ic; // advance to next instruction
+            break;
+        case Compiler::Opcode::generateRandomNumber:
+            //generateRandomNumberUpTo(cmd.operand1);
+            ++ic; // advance to next instruction
+            break;
+        case Compiler::Opcode::if_command:
+            // if the condition of the if command is
+            // is true, then go to the target position
+            // in the vector; otherwise fall through to
+            // the next position
+            /* if (conditionTriggered(cmd))
+             ic = convertToInteger(cmd.operand2);
+             else
+             ++ic; // just advance to the next line*/
+            break;
+        case Compiler::Opcode::goto_command:
+            // just set ic the specified position
+            // in operand1
+            //ic = convertToInteger(cmd.operand1);
+            break;
+        }
 }
 
 //========[ Actor > EnergyHolder > Insect > Grasshopper ]======================
