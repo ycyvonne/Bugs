@@ -109,9 +109,6 @@ StudentWorld* EnergyHolder::world() const
 
 void EnergyHolder::moveMeTo(int x, int y)
 {
-    
-    cout << "id #: " << id() << " moves to (" << x << ", " << y << ")" << endl;
-    
     int thisX = getX();
     int thisY = getY();
     
@@ -124,14 +121,6 @@ void EnergyHolder::moveMeTo(int x, int y)
 
 void EnergyHolder::killMe()
 {
-    cout << "killing id " << id() << ", which is type: ";
-    if(type() == IID_FOOD)
-        cout << "food." << endl;
-    else if(type() == IID_BABY_GRASSHOPPER)
-        cout << "baby grasshopper." << endl;
-    else if(type() == IID_ADULT_GRASSHOPPER)
-        cout << "adult grasshopper." << endl;
-    
     //update display
     setVisible(false);
     
@@ -409,8 +398,7 @@ bool Ant::conditionIsTrue(Compiler::Command cmd)
         case Compiler::Condition::i_smell_pheromone_in_front_of_me:
             int x2, y2;
             getNextPos(x2, y2);
-            world()->hasPheromone(x2, y2, m_colony);
-            break;
+            return world()->hasPheromone(x2, y2, m_colony);
             
         case Compiler::Condition::i_was_bit:
             return m_wasBit;
@@ -624,7 +612,6 @@ void BabyGrasshopper::doesAction()
     if(units() >= 1600)
     {
         //create adult
-        cout << "creating adult " << endl;
         world()->spawnAdultGrasshopper(getX(), getY());
         world()->addFood(getX(), getY(), 100);
         killMe();

@@ -62,7 +62,6 @@ int StudentWorld::init()
     string error;
     
     if(f.loadField(fileName, error) != Field::LoadResult::load_success){
-        cout << error << endl;
         setError(fileName + " " + error);
         return false;
     }
