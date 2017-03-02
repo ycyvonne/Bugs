@@ -59,7 +59,7 @@ public:
     
     void setUnits(int units);
     void addUnits(int units);
-    void decreaseUnits(int units);
+    virtual void decreaseUnits(int units);
 
 protected:
     
@@ -147,7 +147,7 @@ public:
     
     //accessors
     bool isPoisoned();
-    
+    void getNextPos(int &nextX, int &nextY);
     
     //mutators
     void poison();
@@ -168,6 +168,7 @@ public:
 
     virtual void doesAction();
     virtual bool isEnemy(int colony);
+    virtual void decreaseUnits(int units);
     
     bool interpret();
     bool conditionIsTrue(Compiler::Command cmd);
@@ -178,6 +179,13 @@ private:
     int m_ic;
     int m_foodUnits;
     int m_lastRandomNumberGenerated;
+    
+    int m_antHillX;
+    int m_antHillY;
+    
+    bool m_wasBit;
+    bool m_wasBlocked;
+    
     Compiler *m_compiler;
     
 

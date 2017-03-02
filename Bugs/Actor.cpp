@@ -309,31 +309,9 @@ bool Insect::attemptToEat(int amt)
     return false;
 }
 
-bool Ant::isEnemy(int colony)
-{
-    return m_colony != colony;
-}
 
-//========[ Actor > EnergyHolder > Insect > Ant ]======================
 
-Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony)
-    :Insect(id, sw, imageID, startX, startY, right, 1500, 0)
-{
-    setRandomDir();
-    m_colony = colony;
-    m_compiler = com;
-    m_ic = 0;
-    m_foodUnits = 0;
-}
-
-void Ant::doesAction()
-{
-    if(!interpret())
-        killMe();
-    
-}
-
-void Ant::moveForward()
+void Insect::getNextPos(int &nextX, int &nextY)
 {
     int x = getX();
     int y = getY();
@@ -355,9 +333,57 @@ void Ant::moveForward()
             break;
             
     }
+    nextX = x;
+    nextY = y;
+}
+
+//========[ Actor > EnergyHolder > Insect > Ant ]======================
+
+Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony)
+    :Insect(id, sw, imageID, startX, startY, right, 1500, 0)
+{
+    setRandomDir();
+    m_colony = colony;
+    m_compiler = com;
+    m_ic = 0;
+    m_foodUnits = 0;
+    
+    m_antHillX = startX;
+    m_antHillY = startY;
+    
+    m_wasBit = false;
+    m_wasBlocked = false;
+}
+
+bool Ant::isEnemy(int colony)
+{
+    return m_colony != colony;
+}
+
+void Ant::decreaseUnits(int units)
+{
+    EnergyHolder::decreaseUnits(units);
+    m_wasBit = true;
+}
+
+void Ant::doesAction()
+{
+    if(!interpret())
+        killMe();
+}
+
+void Ant::moveForward()
+{
+    //reset last blocked/bit on move
+    m_wasBlocked = false;
+    m_wasBit = false;
+    
+    int x, y;
+    getNextPos(x,y);
     
     if(isBlocked(x, y))
     {
+        m_wasBlocked = true;
         stun();
         return;
     }
@@ -367,7 +393,49 @@ void Ant::moveForward()
 
 bool Ant::conditionIsTrue(Compiler::Command cmd)
 {
-    return true;
+    switch(stoi(cmd.operand1))
+    {
+        case Compiler::Condition::invalid_if:
+            return false;
+            
+        case Compiler::Condition::i_smell_danger_in_front_of_me:
+            int x, y;
+            getNextPos(x, y);
+            
+            EnergyHolder *e;
+            return world()->hasEnemy(x, y, m_colony, e);
+            
+        case Compiler::Condition::i_smell_pheromone_in_front_of_me:
+            break;
+            
+        case Compiler::Condition::i_was_bit:
+            return m_wasBit;
+            
+        case Compiler::Condition::i_am_carrying_food:
+            return m_foodUnits > 0;
+            
+        case Compiler::Condition::i_am_hungry:
+            return units() <= 25;
+            
+        case Compiler::Condition::i_am_standing_on_my_anthill:
+            return getX() == m_antHillX && getY() == m_antHillY;
+            
+        case Compiler::Condition::i_am_standing_on_food:
+            Food *f;
+            return world()->hasFood(getX(), getY(), f);
+            
+        case Compiler::Condition::i_am_standing_with_an_enemy:
+            EnergyHolder *e2;
+            return world()->hasEnemy(getX(), getY(), m_colony, e2);
+            
+        case Compiler::Condition::i_was_blocked_from_moving:
+            return m_wasBlocked;
+            
+        case Compiler::Condition::last_random_number_was_zero:
+            return m_lastRandomNumberGenerated == 0;
+            
+    }
+    return false;
 }
 
 void Ant::rotate(bool clockwise)
@@ -395,9 +463,10 @@ void Ant::rotate(bool clockwise)
 bool Ant::interpret()
 {
     Compiler::Command cmd;
-    bool movedForward = false;
+    bool shouldReturn = false;
+    int numCommands = 0;
     
-    while(!movedForward)
+    while(!shouldReturn && numCommands < 10)
     {
         if (!m_compiler->getCommand(m_ic, cmd))
             return false;
@@ -405,13 +474,11 @@ bool Ant::interpret()
         switch (cmd.opcode)
         {
             case Compiler::Opcode::moveForward:
-                cout << "move forward" << endl;
                 moveForward();
                 ++m_ic;
-                movedForward = true;
+                shouldReturn = true;
                 break;
             case Compiler::Opcode::eatFood:
-                cout << "eating food" << endl;
                 if(m_foodUnits > 100)
                 {
                     addUnits(100);
@@ -425,10 +492,10 @@ bool Ant::interpret()
                 ++m_ic;
                 break;
             case Compiler::Opcode::dropFood:
-                cout << "dropping food" << endl;
                 world()->addFood(getX(), getY(), m_foodUnits);
                 m_foodUnits = 0;
                 ++m_ic;
+                break;
             case Compiler::Opcode::bite:
                 EnergyHolder *e;
                 if(world()->hasEnemy(getX(), getY(), m_colony, e))
@@ -438,10 +505,10 @@ bool Ant::interpret()
                 ++m_ic;
                 break;
             case Compiler::Opcode::pickupFood:
-                cout << "pick up food" << endl;
                 Food *f;
                 if(world()->hasFood(getX(), getY(), f))
                 {
+                    
                     int amtToEat;
                     if(m_foodUnits >= 1400) //max is 1800
                         amtToEat = 1800 - m_foodUnits;
@@ -456,40 +523,35 @@ bool Ant::interpret()
                 ++m_ic;
                 break;
             case Compiler::Opcode::faceRandomDirection:
-                cout << "random dir" << endl;
                 setRandomDir();
                 ++m_ic;
                 break;
             case Compiler::Opcode::rotateClockwise:
-                cout << "clockwise" << endl;
                 rotate(true);
                 ++m_ic;
                 break;
             case Compiler::Opcode::rotateCounterClockwise:
-                cout << "counterclockwise" << endl;
                 rotate(false);
                 ++m_ic;
                 break;
             case Compiler::Opcode::generateRandomNumber:
                 m_lastRandomNumberGenerated = rand() % stoi(cmd.operand1);
-                cout << "generate random number " << m_lastRandomNumberGenerated << endl;
                 ++m_ic;
                 break;
             case Compiler::Opcode::goto_command:
-                cout << "goto command" << endl;
                 m_ic = stoi(cmd.operand1);
                 break;
             case Compiler::Opcode::if_command:
-                cout << "if command" << endl;
                 if (conditionIsTrue(cmd))//conditionIsTrue(cmd)
                     m_ic = stoi(cmd.operand2);
                 else
                     ++m_ic;
                 break;
             default:
-                cout << "default" << endl;
                 ++m_ic;
+                
         }
+        numCommands++;
     }
     
     return true;
@@ -519,26 +581,8 @@ void Grasshopper::move()
 {
     if(makeChecks()){
 
-        int x = getX();
-        int y = getY();
-        switch(getDirection())
-        {
-            case up:
-                y--;
-                break;
-            case down:
-                y++;
-                break;
-            case left:
-                x--;
-                break;
-            case right:
-                x++;
-                break;
-            default:
-                break;
-                
-        }
+        int x, y;
+        getNextPos(x, y);
         
         if(isBlocked(x, y))
         {
