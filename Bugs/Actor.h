@@ -53,11 +53,7 @@ public:
     int     units() const;
     bool    isDead() const;
     bool    isBlocked(int x, int y) const; //looks into m_world to determine if a rock is blocking
-    bool    hasEnemy(int x, int y, int colony, EnergyHolder*& e);
-    
-    
-    bool hasFood(int x, int y, Food*& f);
-    void addFood(int x, int y);
+    StudentWorld* world() const;
     
     //mutators
     
@@ -71,9 +67,6 @@ protected:
     void moveMeTo(int x, int y);
     bool updateStatus(); //decrease unit and check death
     void killMe();
-    void spawnAdultGrasshopper(int x, int y);
-    void stunAll(int x, int y);
-    void poisonAll(int x, int y);
     
 private:
     StudentWorld* m_world;
@@ -108,6 +101,8 @@ class Anthill: public EnergyHolder{
 public:
     Anthill(int id, StudentWorld* sw, Compiler* com, int colony, int startX, int startY);
     virtual void doSomething();
+    void spawnAnt();
+    
 private:
     int m_colony;
     Compiler* m_compiler;
@@ -168,7 +163,10 @@ class Ant: public Insect{
     
 public:
     Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony);
-    virtual void doSomething();
+
+    virtual void doesAction();
+    bool interpret();
+    
 private:
     int m_colony;
     Compiler *m_compiler;

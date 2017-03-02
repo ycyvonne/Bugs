@@ -63,27 +63,30 @@ int StudentWorld::init()
     string error;
     
     if(f.loadField(fileName, error) != Field::LoadResult::load_success){
-        //cout << error << endl;
         setError(fileName + " " + error);
         return false;
     }
     
-    vector<string> fileNames = getFilenamesOfAntPrograms();
+    vector<string> fileNames;// = getFilenamesOfAntPrograms();
+    
+    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt1.bug");
+    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt2.bug");
+    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt3.bug");
+    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt4.bug");
+    
     Compiler* compilers[4];
     string cError;
     
     for(int i = 0; i < 4; i++)
     {
         compilers[i] = new Compiler;
-       /* if (!compilers[i]->compile(fileNames[i], cError))
+        if (!compilers[i]->compile(fileNames[i], cError))
         {
             setError(fileNames[i] + " " + cError);
             return GWSTATUS_LEVEL_ERROR;
-        }*/
+        }
+        m_colonyAntCount.push_back(0);
     }
-    
-    //now success, can set anthill0 compiler
-    
     
     for(int i = 0; i < VIEW_WIDTH; i++)
     {
@@ -110,10 +113,13 @@ int StudentWorld::init()
                     break;
                 case Field::FieldItem::anthill0:
                     anthill = 0;
+                    break;
                 case Field::FieldItem::anthill1:
                     anthill = 1;
+                    break;
                 case Field::FieldItem::anthill2:
                     anthill = 2;
+                    break;
                 case Field::FieldItem::anthill3:
                     anthill = 3;
                     break;
@@ -256,6 +262,35 @@ void StudentWorld::spawnAdultGrasshopper(int x, int y)
 {
     Actor* a = new AdultGrasshopper(m_currentUniqueId++, this, x, y);
     insertActor(a, x, y);
+}
+
+void StudentWorld::spawnAnt(int x, int y, int colony, Compiler* com)
+{
+    int imageId;
+    
+    switch(colony)
+    {
+        case 0:
+            imageId = IID_ANT_TYPE0;
+            break;
+        case 1:
+            imageId = IID_ANT_TYPE1;
+            break;
+        case 2:
+            imageId = IID_ANT_TYPE2;
+            break;
+        case 3:
+            imageId = IID_ANT_TYPE3;
+            break;
+        default:
+            imageId = IID_ANT_TYPE0;
+    }
+    
+    Actor* a = new Ant(m_currentUniqueId++, this, com, imageId, x, y, colony);
+    insertActor(a, x, y);
+    
+    //increments to keep track
+    m_colonyAntCount[colony]++;
 }
 
 void StudentWorld::stunAll(int x, int y)

@@ -54,9 +54,7 @@ void Actor::setRandomDir()
     }
 }
 
-
 //==============[ Actor > EnergyHolder ]====================================
-
 
 EnergyHolder::EnergyHolder(int id, StudentWorld* sw,
              int imageID, int startX, int startY, Direction dir, int depth)
@@ -104,14 +102,9 @@ bool EnergyHolder::isBlocked(int x, int y) const{
     return m_world->isBlocked(x, y);
 }
 
-void EnergyHolder::addFood(int x, int y)
+StudentWorld* EnergyHolder::world() const
 {
-    m_world->addFood(x, y);
-}
-
-bool EnergyHolder::hasFood(int x, int y, Food*& f)
-{
-    return m_world->hasFood(x, y, f);
+    return m_world;
 }
 
 void EnergyHolder::moveMeTo(int x, int y)
@@ -145,26 +138,6 @@ void EnergyHolder::killMe()
     //update world
     m_world->setFlag(getX(), getY());
     m_world->killActor(id(), getX(), getY());
-}
-
-void EnergyHolder::spawnAdultGrasshopper(int x, int y)
-{
-    m_world->spawnAdultGrasshopper(x, y);
-}
-
-bool EnergyHolder::hasEnemy(int x, int y, int colony, EnergyHolder*& a)
-{
-    return m_world->hasEnemy(x, y, colony, a);
-}
-
-void EnergyHolder::stunAll(int x, int y)
-{
-    m_world->stunAll(x, y);
-}
-
-void EnergyHolder::poisonAll(int x, int y)
-{
-    m_world->poisonAll(x, y);
 }
 
 //==============[ Actor > Pebble ]====================================
@@ -232,7 +205,7 @@ void Anthill::doSomething()
     updateStatus();
     
     Food* food;
-    if(hasFood(getX(), getY(), food))
+    if(world()->hasFood(getX(), getY(), food))
     {
         addUnits(food->eat(10000));
     }
@@ -242,8 +215,7 @@ void Anthill::doSomething()
     {
         //add ant
         decreaseUnits(1500);
-        
-        //increase num ants this colony has produced, var held by student world
+        world()->spawnAnt(getX(), getY(), m_colony, m_compiler); //increments count of produced
     }
     
 }
@@ -262,7 +234,7 @@ Pool::Pool(int id, StudentWorld* sw, int startX, int startY)
 
 void Pool::doSomething()
 {
-    stunAll(getX(), getY());
+    world()->stunAll(getX(), getY());
 }
 
 
@@ -275,7 +247,7 @@ Poison::Poison(int id, StudentWorld* sw, int startX, int startY)
 
 void Poison::doSomething()
 {
-    poisonAll(getX(), getY());
+    world()->poisonAll(getX(), getY());
 }
 
 
@@ -328,7 +300,7 @@ void Insect::doSomething()
 bool Insect::attemptToEat()
 {
     Food* food;
-    if(hasFood(getX(), getY(), food))
+    if(world()->hasFood(getX(), getY(), food))
     {
         addUnits(food->eat(200));
         return true;
@@ -355,15 +327,24 @@ void Ant::runCommand(const Compiler::Command& c)
     else ... // and so on
 }*/
 
-void Ant::doSomething()
+void Ant::doesAction()
+{
+    if(!interpret())
+        killMe();
+    
+    cout << "does action" << endl;
+}
+
+bool Ant::interpret()
 {
     Compiler::Command cmd;
     int ic = 0; // start at the beginning of the vector
-    //for (;;) // keep running forever for now
-    //{
+
     // get the command from element ic of the vector
-    if ( ! m_compiler->getCommand(ic, cmd) )
-        return; // error - no such instruction!
+    if (!m_compiler->getCommand(ic, cmd))
+        return false;
+    
+    cout << "success in getting command" << endl;
     
     switch (cmd.opcode)
     {
@@ -392,7 +373,8 @@ void Ant::doSomething()
             // in operand1
             //ic = convertToInteger(cmd.operand1);
             break;
-        }
+    }
+    return true;
 }
 
 //========[ Actor > EnergyHolder > Insect > Grasshopper ]======================
@@ -478,8 +460,8 @@ void BabyGrasshopper::doesAction()
     {
         //create adult
         cout << "creating adult " << endl;
-        spawnAdultGrasshopper(getX(), getY());
-        addFood(getX(), getY());
+        world()->spawnAdultGrasshopper(getX(), getY());
+        world()->addFood(getX(), getY());
         killMe();
         return;
     }
@@ -518,7 +500,7 @@ void AdultGrasshopper::doesAction()
         //bite => -50 HP
         
         EnergyHolder *e;
-        if(hasEnemy(getX(), getY(), -1, e))
+        if(world()->hasEnemy(getX(), getY(), -1, e))
         {
             e->decreaseUnits(50);
         }

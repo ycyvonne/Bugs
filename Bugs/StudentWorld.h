@@ -6,6 +6,7 @@
 #include "Actor.h"
 #include <string>
 #include <map>
+#include <vector>
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
@@ -31,6 +32,8 @@ public:
     void setFlag(int x, int y);
     void resetFlag();
     void spawnAdultGrasshopper(int x, int y);
+    void spawnAnt(int x, int y, int colony, Compiler* com);
+    
     void stunAll(int x, int y);
     void poisonAll(int x, int y);
     
@@ -47,6 +50,7 @@ private:
     int  m_tickCount;
     int  m_currentUniqueId;
     indexPair   m_flagIndex;
+    std::vector<int> m_colonyAntCount;
     
     //helper functions
     void removeActor(bool hardDelete, int id, int x, int y);
