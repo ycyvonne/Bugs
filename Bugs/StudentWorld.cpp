@@ -320,7 +320,7 @@ bool StudentWorld::winningAntExists(){
     return false;
 }
 
-void StudentWorld::addFood(int x, int y)
+void StudentWorld::addFood(int x, int y, int amt)
 {
     Food *f;
     if(hasFood(x, y, f))
@@ -354,6 +354,12 @@ bool StudentWorld::hasEnemy(int x, int y, int colony, EnergyHolder*& a)
     for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
         Actor* cur = it->second;
         if(colony == -1 && cur->isInsect()) //grasshoppers & ants
+        {
+            a = static_cast<EnergyHolder*>(cur);
+            return true;
+        }
+        else if(colony >= 0 && colony <= 3 &&
+                cur->isInsect() && static_cast<Insect*>(cur)->isEnemy(colony))
         {
             a = static_cast<EnergyHolder*>(cur);
             return true;

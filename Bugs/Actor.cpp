@@ -1,6 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
-#include "Compiler.h"
+
 #include <iostream>
 
 using namespace std;
@@ -297,17 +297,23 @@ void Insect::doSomething()
     
 }
 
-bool Insect::attemptToEat()
+bool Insect::attemptToEat(int amt)
 {
     Food* food;
     if(world()->hasFood(getX(), getY(), food))
     {
-        addUnits(food->eat(200));
+        addUnits(food->eat(amt));
         return true;
     }
     
     return false;
 }
+
+bool Ant::isEnemy(int colony)
+{
+    return m_colony != colony;
+}
+
 //========[ Actor > EnergyHolder > Insect > Ant ]======================
 
 Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony)
@@ -316,64 +322,176 @@ Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int s
     setRandomDir();
     m_colony = colony;
     m_compiler = com;
+    m_ic = 0;
+    m_foodUnits = 0;
 }
-/*
-void Ant::runCommand(const Compiler::Command& c)
-{
-    if (c.opcode == moveForward)
-        moveTheAntForward();
-    else if (c.opcode == rotateClockwise)
-        rotateTheAntClockwise();
-    else ... // and so on
-}*/
 
 void Ant::doesAction()
 {
     if(!interpret())
         killMe();
     
-    cout << "does action" << endl;
+}
+
+void Ant::moveForward()
+{
+    int x = getX();
+    int y = getY();
+    switch(getDirection())
+    {
+        case up:
+            y--;
+            break;
+        case down:
+            y++;
+            break;
+        case left:
+            x--;
+            break;
+        case right:
+            x++;
+            break;
+        default:
+            break;
+            
+    }
+    
+    if(isBlocked(x, y))
+    {
+        stun();
+        return;
+    }
+    
+    moveMeTo(x, y);
+}
+
+bool Ant::conditionIsTrue(Compiler::Command cmd)
+{
+    return true;
+}
+
+void Ant::rotate(bool clockwise)
+{
+    Direction dir[4] = {up, right, down, left};
+    int index = -1;
+    for(int i = 0; i < 4; i++){
+        if(dir[i] == getDirection()){
+            index = i;
+            break;
+        }
+    }
+    
+    if(index == -1) return;
+    
+    if(clockwise) index--;
+    else index++;
+    
+    if(index > 3) index -= 4;
+    else if(index < 0) index += 4;
+    
+    setDirection(dir[index]);
 }
 
 bool Ant::interpret()
 {
     Compiler::Command cmd;
-    int ic = 0; // start at the beginning of the vector
-
-    // get the command from element ic of the vector
-    if (!m_compiler->getCommand(ic, cmd))
-        return false;
+    bool movedForward = false;
     
-    cout << "success in getting command" << endl;
-    
-    switch (cmd.opcode)
+    while(!movedForward)
     {
-        case Compiler::Opcode::moveForward:
-            // cause the ant to move forward by
-            // updating its x,y coordinates
-            //moveTheAntForward();
-            ++ic; // advance to next instruction
-            break;
-        case Compiler::Opcode::generateRandomNumber:
-            //generateRandomNumberUpTo(cmd.operand1);
-            ++ic; // advance to next instruction
-            break;
-        case Compiler::Opcode::if_command:
-            // if the condition of the if command is
-            // is true, then go to the target position
-            // in the vector; otherwise fall through to
-            // the next position
-            /* if (conditionTriggered(cmd))
-             ic = convertToInteger(cmd.operand2);
-             else
-             ++ic; // just advance to the next line*/
-            break;
-        case Compiler::Opcode::goto_command:
-            // just set ic the specified position
-            // in operand1
-            //ic = convertToInteger(cmd.operand1);
-            break;
+        if (!m_compiler->getCommand(m_ic, cmd))
+            return false;
+        
+        switch (cmd.opcode)
+        {
+            case Compiler::Opcode::moveForward:
+                cout << "move forward" << endl;
+                moveForward();
+                ++m_ic;
+                movedForward = true;
+                break;
+            case Compiler::Opcode::eatFood:
+                cout << "eating food" << endl;
+                if(m_foodUnits > 100)
+                {
+                    addUnits(100);
+                    m_foodUnits -= 100;
+                }
+                else
+                {
+                    addUnits(m_foodUnits);
+                    m_foodUnits = 0;
+                }
+                ++m_ic;
+                break;
+            case Compiler::Opcode::dropFood:
+                cout << "dropping food" << endl;
+                world()->addFood(getX(), getY(), m_foodUnits);
+                m_foodUnits = 0;
+                ++m_ic;
+            case Compiler::Opcode::bite:
+                EnergyHolder *e;
+                if(world()->hasEnemy(getX(), getY(), m_colony, e))
+                {
+                    e->decreaseUnits(15);
+                }
+                ++m_ic;
+                break;
+            case Compiler::Opcode::pickupFood:
+                cout << "pick up food" << endl;
+                Food *f;
+                if(world()->hasFood(getX(), getY(), f))
+                {
+                    int amtToEat;
+                    if(m_foodUnits >= 1400) //max is 1800
+                        amtToEat = 1800 - m_foodUnits;
+                    else
+                        amtToEat = 400;
+                    
+                    m_foodUnits += f->eat(amtToEat);
+                }
+                ++m_ic;
+                break;
+            case Compiler::Opcode::emitPheromone:
+                ++m_ic;
+                break;
+            case Compiler::Opcode::faceRandomDirection:
+                cout << "random dir" << endl;
+                setRandomDir();
+                ++m_ic;
+                break;
+            case Compiler::Opcode::rotateClockwise:
+                cout << "clockwise" << endl;
+                rotate(true);
+                ++m_ic;
+                break;
+            case Compiler::Opcode::rotateCounterClockwise:
+                cout << "counterclockwise" << endl;
+                rotate(false);
+                ++m_ic;
+                break;
+            case Compiler::Opcode::generateRandomNumber:
+                m_lastRandomNumberGenerated = rand() % stoi(cmd.operand1);
+                cout << "generate random number " << m_lastRandomNumberGenerated << endl;
+                ++m_ic;
+                break;
+            case Compiler::Opcode::goto_command:
+                cout << "goto command" << endl;
+                m_ic = stoi(cmd.operand1);
+                break;
+            case Compiler::Opcode::if_command:
+                cout << "if command" << endl;
+                if (conditionIsTrue(cmd))//conditionIsTrue(cmd)
+                    m_ic = stoi(cmd.operand2);
+                else
+                    ++m_ic;
+                break;
+            default:
+                cout << "default" << endl;
+                ++m_ic;
+        }
     }
+    
     return true;
 }
 
@@ -461,12 +579,12 @@ void BabyGrasshopper::doesAction()
         //create adult
         cout << "creating adult " << endl;
         world()->spawnAdultGrasshopper(getX(), getY());
-        world()->addFood(getX(), getY());
+        world()->addFood(getX(), getY(), 100);
         killMe();
         return;
     }
     
-    if(attemptToEat())
+    if(attemptToEat(200))
     {
         int random = rand() % 2;
         if(random == 0){
@@ -518,7 +636,7 @@ void AdultGrasshopper::doesAction()
         if(!isBlocked(x, y) && x > 0 && y > 0 && x < VIEW_WIDTH && y < VIEW_HEIGHT)
             moveMeTo(x, y);
     }
-    else if(!(attemptToEat() && randTwo == 0))
+    else if(!(attemptToEat(200) && randTwo == 0))
     {
         //if attempt to eat failed or attempt to eat successed & 50% chance
         move();

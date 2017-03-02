@@ -3,9 +3,9 @@
 
 #include "GraphObject.h"
 #include "GameConstants.h"
+#include "Compiler.h"
 
 class StudentWorld;
-class Compiler;
 class Food;
 
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
@@ -143,14 +143,16 @@ public:
     virtual void doSomething();
     //mean to be overriden in subclasses
     virtual void doesAction() {}
+    virtual bool isEnemy(int colony) {return true;}
     
     //accessors
     bool isPoisoned();
     
+    
     //mutators
     void poison();
     void getHungrier();
-    bool attemptToEat();
+    bool attemptToEat(int amt);
     void stun();
     
     
@@ -165,11 +167,23 @@ public:
     Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony);
 
     virtual void doesAction();
+    virtual bool isEnemy(int colony);
+    
     bool interpret();
+    bool conditionIsTrue(Compiler::Command cmd);
+    
     
 private:
     int m_colony;
+    int m_ic;
+    int m_foodUnits;
+    int m_lastRandomNumberGenerated;
     Compiler *m_compiler;
+    
+
+    void moveForward();
+    void rotate(bool clockwise);
+    
 };
 
 class Grasshopper: public Insect{

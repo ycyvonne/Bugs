@@ -41,7 +41,7 @@ public:
     bool moveActor(int id, int xStart, int yStart, int xEnd, int yEnd);
     bool winningAntExists();
     
-    void addFood(int x, int y);
+    void addFood(int x, int y, int amt);
     bool hasFood(int x, int y, Food*& a);
     bool hasEnemy(int x, int y, int colony, EnergyHolder*& a);
 
