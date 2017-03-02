@@ -58,21 +58,16 @@ int StudentWorld::init()
     m_currentUniqueId = 0;
     
     Field f;
-    string fileName = "/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/field.txt";
-   // string fileName = getFieldFilename();
+    string fileName = getFieldFilename();
     string error;
     
     if(f.loadField(fileName, error) != Field::LoadResult::load_success){
+        cout << error << endl;
         setError(fileName + " " + error);
         return false;
     }
     
-    vector<string> fileNames;// = getFilenamesOfAntPrograms();
-    
-    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt1.bug");
-    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt2.bug");
-    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt3.bug");
-    fileNames.push_back("/Users/yvonne.chen1/Documents/Main/Courses\:School/Q2/CS\ 32/projects/Project3/Bugs/Bugs/USCAnt4.bug");
+    vector<string> files = getFilenamesOfAntPrograms();
     
     Compiler* compilers[4];
     string cError;
@@ -80,12 +75,14 @@ int StudentWorld::init()
     for(int i = 0; i < 4; i++)
     {
         compilers[i] = new Compiler;
-        if (!compilers[i]->compile(fileNames[i], cError))
+        if (!compilers[i]->compile(files[i], cError))
         {
-            setError(fileNames[i] + " " + cError);
+            setError(files[i] + " " + cError);
             return GWSTATUS_LEVEL_ERROR;
         }
+
         m_colonyAntCount.push_back(0);
+        m_colonyNames.push_back(compilers[i]->getColonyName());
     }
     
     for(int i = 0; i < VIEW_WIDTH; i++)
@@ -141,7 +138,17 @@ int StudentWorld::init()
 void StudentWorld::setDisplayText()
 {
     string s = "Ticks: ";
-    s += to_string(m_tickCount);
+    s += to_string(END_GAME_TICKS - m_tickCount);
+    s += " - ";
+    
+    for(int i = 0; i < m_colonyNames.size(); i++)
+    {
+        s += m_colonyNames[i];
+        s += ": ";
+        s += to_string(m_colonyAntCount[i]);
+        s += " ants ";
+    }
+    
     setGameStatText(s);
 }
 
@@ -189,7 +196,7 @@ int StudentWorld::move()
     {
         if(winningAntExists())
         {
-            setWinner(getWinnerName());
+            setWinner(getWinnerName(m_winner));
             return GWSTATUS_PLAYER_WON;
         }
         return GWSTATUS_NO_WINNER;
@@ -289,8 +296,49 @@ void StudentWorld::spawnAnt(int x, int y, int colony, Compiler* com)
     Actor* a = new Ant(m_currentUniqueId++, this, com, imageId, x, y, colony);
     insertActor(a, x, y);
     
-    //increments to keep track
     m_colonyAntCount[colony]++;
+}
+
+void StudentWorld::spawnPheromone(int x, int y, int colony)
+{
+    int imageId;
+    switch(colony)
+    {
+        case 0:
+            imageId = IID_PHEROMONE_TYPE0;
+            break;
+        case 1:
+            imageId = IID_PHEROMONE_TYPE1;
+            break;
+        case 2:
+            imageId = IID_PHEROMONE_TYPE2;
+            break;
+        case 3:
+            imageId = IID_PHEROMONE_TYPE3;
+            break;
+        default:
+            imageId = IID_PHEROMONE_TYPE0;
+    }
+    
+    Actor* a = new Pheromone(m_currentUniqueId++, this, imageId, x, y, colony);
+    insertActor(a, x, y);
+    
+}
+
+bool StudentWorld::hasPheromone(int x, int y, int myColony)
+{
+    int types[4] = {IID_PHEROMONE_TYPE0, IID_PHEROMONE_TYPE1, IID_PHEROMONE_TYPE2, IID_PHEROMONE_TYPE3};
+    
+    indexPair index (x, y);
+    mmap::iterator it;
+    for(it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
+        if(it->second->type() == types[myColony])
+        {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 void StudentWorld::stunAll(int x, int y)
@@ -315,9 +363,33 @@ void StudentWorld::poisonAll(int x, int y)
     }
 }
 
-//TODO: complete this
-bool StudentWorld::winningAntExists(){
-    return false;
+bool StudentWorld::winningAntExists()
+{
+    int maxAntsProduced = 0;
+    for(int i = 0; i < m_colonyAntCount.size(); i++)
+    {
+        if(m_colonyAntCount[i] > maxAntsProduced)
+        {
+            maxAntsProduced = m_colonyAntCount[i];
+            m_winner = i;
+        }
+    }
+    
+    int count = 0;
+    
+    //check duplicates
+    for(int i = 0; i < m_colonyAntCount.size(); i++)
+    {
+        if(m_colonyAntCount[i] == maxAntsProduced)
+            count++;
+    }
+    
+    return count == 1 && maxAntsProduced != 0;
+}
+
+string StudentWorld::getWinnerName(int colony)
+{
+    return m_colonyNames[colony];
 }
 
 void StudentWorld::addFood(int x, int y, int amt)

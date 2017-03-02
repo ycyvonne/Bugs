@@ -177,10 +177,11 @@ int Food::eat(int amt)
 
 //==============[ Actor > EnergyHolder > Pheromone ]====================================
 
-Pheromone::Pheromone(int id, StudentWorld* sw, int idType, int startX, int startY)
+Pheromone::Pheromone(int id, StudentWorld* sw, int idType, int startX, int startY, int colony)
     :EnergyHolder(id, sw, idType, startX, startY, right, 2)
 {
     setUnits(256);
+    m_colony = colony;
 }
 
 void Pheromone::doSomething()
@@ -406,6 +407,9 @@ bool Ant::conditionIsTrue(Compiler::Command cmd)
             return world()->hasEnemy(x, y, m_colony, e);
             
         case Compiler::Condition::i_smell_pheromone_in_front_of_me:
+            int x2, y2;
+            getNextPos(x2, y2);
+            world()->hasPheromone(x2, y2, m_colony);
             break;
             
         case Compiler::Condition::i_was_bit:
@@ -508,7 +512,6 @@ bool Ant::interpret()
                 Food *f;
                 if(world()->hasFood(getX(), getY(), f))
                 {
-                    
                     int amtToEat;
                     if(m_foodUnits >= 1400) //max is 1800
                         amtToEat = 1800 - m_foodUnits;
@@ -520,6 +523,7 @@ bool Ant::interpret()
                 ++m_ic;
                 break;
             case Compiler::Opcode::emitPheromone:
+                world()->spawnPheromone(getX(), getY(), m_colony);
                 ++m_ic;
                 break;
             case Compiler::Opcode::faceRandomDirection:
@@ -608,7 +612,6 @@ bool Grasshopper::makeChecks()
     
     return true;
 }
-
 
 //=========[ Actor > EnergyHolder > Insect > Grasshopper > BabyGrasshopper ]========
 //sets imageID, health = 500

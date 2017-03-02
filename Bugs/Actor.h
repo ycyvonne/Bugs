@@ -88,11 +88,11 @@ private:
 
 class Pheromone: public EnergyHolder{
 public:
-    Pheromone(int id, StudentWorld* sw, int idType, int startX, int startY);
+    Pheromone(int id, StudentWorld* sw, int idType, int startX, int startY, int colony);
     virtual void doSomething();
 
 private:
-    
+    int m_colony;
     
 };
 

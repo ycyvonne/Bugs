@@ -33,23 +33,30 @@ public:
     void resetFlag();
     void spawnAdultGrasshopper(int x, int y);
     void spawnAnt(int x, int y, int colony, Compiler* com);
+    void spawnPheromone(int x, int y, int colony);
     
     void stunAll(int x, int y);
     void poisonAll(int x, int y);
     
     bool isBlocked(int x, int y);
     bool moveActor(int id, int xStart, int yStart, int xEnd, int yEnd);
-    bool winningAntExists();
+    bool hasPheromone(int x, int y, int myColony);
     
     void addFood(int x, int y, int amt);
     bool hasFood(int x, int y, Food*& a);
     bool hasEnemy(int x, int y, int colony, EnergyHolder*& a);
+    
+    bool winningAntExists();
+    std::string getWinnerName(int colony);
 
 private:
     mmap m_map;
     int  m_tickCount;
     int  m_currentUniqueId;
+    int  m_winner;
     indexPair   m_flagIndex;
+    
+    std::vector<std::string> m_colonyNames;
     std::vector<int> m_colonyAntCount;
     
     //helper functions

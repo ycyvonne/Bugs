@@ -13,9 +13,9 @@ colony: USCAnt // first line specifies the ant's name
 start:
  	faceRandomDirection   
  	moveForward           
- 	if i_am_standing_on_food then goto on_food
- 	if i_am_hungry then goto eat_food
- 	if i_am_standing_on_my_anthill then goto on_hill
+// 	if i_am_standing_on_food then goto on_food
+// 	if i_am_hungry then goto eat_food
+// 	if i_am_standing_on_my_anthill then goto on_hill
  	goto start 	// jump back to the "start:" line
  
 on_food:
