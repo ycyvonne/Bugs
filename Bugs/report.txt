@@ -1,3 +1,4 @@
+*drag to correct width for better viewing
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------|CS32 PROJECT 3|---------------------------------------------
 --------------------------------------------|    Report    |--------------------------------------------
@@ -270,6 +271,8 @@ I modified the poison strength to be larger, so that I could see when insects st
 Tested a variety of things:
 Tested to make sure it could detect enemy (set bite strength to be large, so enemy would die immediately)
 Tested to make sure it would die appropriately (at correct tick according to initial health), be stunned appropriately, and move correctly according to directions. (I tested directions by manually setting them). Tested with Food/Poison/Water as stated above.
+
+Tested food dropped correctly by emitting pheromones within derived class Ant, and seeing the pheromone trail stop at a pile of food (dropped during death).
 
 ###Ant class
 

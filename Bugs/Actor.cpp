@@ -270,8 +270,12 @@ int Insect::getMaxStunnedTurns() const
 
 void Insect::doSomething()
 {
-    if(updateStatus()) //if died, return immediately
+    if(updateStatus()) //if died, drop food and return immediately
+    {
+        world()->addFood(getX(), getY(), Insect::CARCASS_UNITS);
         return;
+    }
+    
     
     if(m_stunnedTicksRemaining > 0)
     {
@@ -343,6 +347,7 @@ Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int s
     
     m_wasBit = false;
     m_wasBlocked = false;
+    m_lastRandomNumberGenerated = 0;
     
     m_maxStunnedTurns = 0;
 }
@@ -625,7 +630,7 @@ void BabyGrasshopper::doesAction()
     {
         //create adult
         world()->spawnAdultGrasshopper(getX(), getY());
-        world()->addFood(getX(), getY(), BabyGrasshopper::CARCASS_UNITS);
+        world()->addFood(getX(), getY(), Insect::CARCASS_UNITS);
         killMe();
         return;
     }

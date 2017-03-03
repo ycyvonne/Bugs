@@ -171,6 +171,7 @@ public:
     
     //constants
     const int POISON_STRENGTH = 150;
+    const int CARCASS_UNITS = 100;
     
     //constructor
     Insect(int id, StudentWorld* sw,
@@ -278,7 +279,6 @@ public:
     
     //constants
     const int MAX_HEALTH = 1600;
-    const int CARCASS_UNITS = 100;
     
     //constructor
     BabyGrasshopper(int id, StudentWorld* sw, int startX, int startY);
