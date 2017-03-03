@@ -145,7 +145,7 @@ void StudentWorld::setDisplayText()
         s += m_colonyNames[i];
         s += ": ";
         s += to_string(m_colonyAntCount[i]);
-        s += " ants ";
+        s += " ants  ";
     }
     
     setGameStatText(s);

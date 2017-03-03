@@ -12,9 +12,10 @@ colony: USCAnt // first line specifies the ant's name
  
 start:
  	faceRandomDirection   
+    //rotateCounterClockwise
+    emitPheromone
     moveForward           
- 	emitPheromone
-    if i_am_standing_on_food then goto on_food
+ 	if i_am_standing_on_food then goto on_food
  	if i_am_hungry then goto eat_food
  	if i_am_standing_on_my_anthill then goto on_hill
     goto start 	// jump back to the "start:" line
@@ -31,3 +32,4 @@ on_hill:
  	dropFood    // feed the anthill's queen so she
                  // can produce more ants for the colony
  	goto start  // jump back to the "start:" line
+

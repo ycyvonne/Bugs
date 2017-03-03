@@ -14,7 +14,6 @@ Actor::Actor(int id, int imageID, int startX, int startY,
 {
     m_id = id;
     m_type = imageID;
-    m_isInsect = false;
     setDirection(dir);
 }
 
@@ -24,14 +23,6 @@ int Actor::type() const{
 
 int Actor::id() const{
     return m_id;
-}
-
-bool Actor::isInsect() const{
-    return m_isInsect;
-}
-
-void Actor::setAsInsect(){
-    m_isInsect = true;
 }
 
 void Actor::setRandomDir()
@@ -98,10 +89,6 @@ bool EnergyHolder::updateStatus()
     return false;
 }
 
-bool EnergyHolder::isBlocked(int x, int y) const{
-    return m_world->isBlocked(x, y);
-}
-
 StudentWorld* EnergyHolder::world() const
 {
     return m_world;
@@ -137,17 +124,17 @@ Pebble::Pebble(int id, int startX, int startY)
 //==============[ Actor > EnergyHolder > Food ]====================================
 
 Food::Food(int id, StudentWorld* sw, int startX, int startY, bool dueToDeath)
-    :EnergyHolder(id, sw, IID_FOOD, startX, startY, right, 2)
+    :EnergyHolder(id, sw, IID_FOOD, startX, startY, STARTING_DIR, 2)
 {
     if(dueToDeath)
-        setUnits(100);
+        setUnits(Food::CARCASS_UNITS);
     else
-        setUnits(6000);
+        setUnits(Food::STARTING_UNITS);
 }
 
 void Food::addCarcass()
 {
-    addUnits(100);
+    addUnits(Food::CARCASS_UNITS);
 }
 
 int Food::eat(int amt)
@@ -167,9 +154,9 @@ int Food::eat(int amt)
 //==============[ Actor > EnergyHolder > Pheromone ]====================================
 
 Pheromone::Pheromone(int id, StudentWorld* sw, int idType, int startX, int startY, int colony)
-    :EnergyHolder(id, sw, idType, startX, startY, right, 2)
+    :EnergyHolder(id, sw, idType, startX, startY, STARTING_DIR, 2)
 {
-    setUnits(256);
+    setUnits(Pheromone::STARTING_UNITS);
     m_colony = colony;
 }
 
@@ -183,11 +170,11 @@ void Pheromone::doSomething()
 
 
 Anthill::Anthill(int id, StudentWorld* sw, Compiler* com, int colony, int startX, int startY)
-    :EnergyHolder(id, sw, IID_ANT_HILL, startX, startY, right, 2)
+    :EnergyHolder(id, sw, IID_ANT_HILL, startX, startY, STARTING_DIR, 2)
 {
     m_colony = colony;
     m_compiler = com;
-    setUnits(8999);
+    setUnits(Anthill::STARTING_UNITS);
 }
 
 void Anthill::doSomething()
@@ -197,14 +184,14 @@ void Anthill::doSomething()
     Food* food;
     if(world()->hasFood(getX(), getY(), food))
     {
-        addUnits(food->eat(10000));
+        addUnits(food->eat(Anthill::ATTEMPT_TO_EAT));
     }
     
     //checks if enough to produce ant
-    if(units() >= 2000)
+    if(units() >= SPAWN_ANT_THRESHOLD)
     {
         //add ant
-        decreaseUnits(1500);
+        decreaseUnits(Anthill::ANT_HEALTH_UNITS);
         world()->spawnAnt(getX(), getY(), m_colony, m_compiler); //increments count of produced
     }
     
@@ -220,7 +207,7 @@ TriggerableActor::TriggerableActor(int id, StudentWorld* sw,
 //=====[ Actor > EnergyHolder > TriggerableActor > Pool ]============
 
 Pool::Pool(int id, StudentWorld* sw, int startX, int startY)
-    :TriggerableActor(id, sw, IID_WATER_POOL, startX, startY, right, 2) {}
+    :TriggerableActor(id, sw, IID_WATER_POOL, startX, startY, STARTING_DIR, 2) {}
 
 void Pool::doSomething()
 {
@@ -232,7 +219,7 @@ void Pool::doSomething()
 //=======[ Actor > EnergyHolder > TriggerableActor > Poison ]============
 
 Poison::Poison(int id, StudentWorld* sw, int startX, int startY)
-    :TriggerableActor(id, sw, IID_POISON, startX, startY, right, 2)
+    :TriggerableActor(id, sw, IID_POISON, startX, startY, STARTING_DIR, 2)
 {}
 
 void Poison::doSomething()
@@ -250,8 +237,8 @@ Insect::Insect(int id, StudentWorld* sw,
 {
     setUnits(startingHealth);
     m_stunnedTicksRemaining = stuns;
-    setAsInsect();
     m_stunned = false;
+    m_maxStunnedTurns = 2;
 }
 
 void Insect::stun()
@@ -265,7 +252,12 @@ void Insect::stun()
 
 void Insect::poison()
 {
-    decreaseUnits(150);
+    decreaseUnits(Insect::POISON_STRENGTH);
+}
+
+int Insect::getMaxStunnedTurns() const
+{
+    return m_maxStunnedTurns;
 }
 
 void Insect::doSomething()
@@ -280,7 +272,7 @@ void Insect::doSomething()
     }
 
     m_stunned = false;
-    m_stunnedTicksRemaining = 2;
+    m_stunnedTicksRemaining = getMaxStunnedTurns();
         
     //movement & death related
     doesAction();
@@ -308,10 +300,10 @@ void Insect::getNextPos(int &nextX, int &nextY)
     switch(getDirection())
     {
         case up:
-            y--;
+            y++;
             break;
         case down:
-            y++;
+            y--;
             break;
         case left:
             x--;
@@ -330,7 +322,7 @@ void Insect::getNextPos(int &nextX, int &nextY)
 //========[ Actor > EnergyHolder > Insect > Ant ]======================
 
 Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony)
-    :Insect(id, sw, imageID, startX, startY, right, 1500, 0)
+    :Insect(id, sw, imageID, startX, startY, STARTING_DIR, 1500, 0)
 {
     setRandomDir();
     m_colony = colony;
@@ -343,9 +335,16 @@ Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int s
     
     m_wasBit = false;
     m_wasBlocked = false;
+    
+    m_maxStunnedTurns = 0;
 }
 
-bool Ant::isEnemy(int colony)
+int Ant::getMaxStunnedTurns() const
+{
+    return m_maxStunnedTurns;
+}
+
+bool Ant::isEnemy(int colony) const
 {
     return m_colony != colony;
 }
@@ -353,7 +352,9 @@ bool Ant::isEnemy(int colony)
 void Ant::decreaseUnits(int units)
 {
     EnergyHolder::decreaseUnits(units);
-    m_wasBit = true;
+    
+    if(units != 1)
+        m_wasBit = true;
 }
 
 void Ant::doesAction()
@@ -371,7 +372,7 @@ void Ant::moveForward()
     int x, y;
     getNextPos(x,y);
     
-    if(isBlocked(x, y))
+    if(world()->isBlocked(x, y))
     {
         m_wasBlocked = true;
         stun();
@@ -407,7 +408,7 @@ bool Ant::conditionIsTrue(Compiler::Command cmd)
             return m_foodUnits > 0;
             
         case Compiler::Condition::i_am_hungry:
-            return units() <= 25;
+            return units() <= Ant::HUNGER_THRESHOLD;
             
         case Compiler::Condition::i_am_standing_on_my_anthill:
             return getX() == m_antHillX && getY() == m_antHillY;
@@ -443,8 +444,8 @@ void Ant::rotate(bool clockwise)
     
     if(index == -1) return;
     
-    if(clockwise) index--;
-    else index++;
+    if(clockwise) index++;
+    else index--;
     
     if(index > 3) index -= 4;
     else if(index < 0) index += 4;
@@ -463,18 +464,19 @@ bool Ant::interpret()
         if (!m_compiler->getCommand(m_ic, cmd))
             return false;
         
+        shouldReturn = true;
+        
         switch (cmd.opcode)
         {
             case Compiler::Opcode::moveForward:
                 moveForward();
                 ++m_ic;
-                shouldReturn = true;
                 break;
             case Compiler::Opcode::eatFood:
-                if(m_foodUnits > 100)
+                if(m_foodUnits > Ant::ATTEMPT_TO_EAT)
                 {
-                    addUnits(100);
-                    m_foodUnits -= 100;
+                    addUnits(Ant::ATTEMPT_TO_EAT);
+                    m_foodUnits -= Ant::ATTEMPT_TO_EAT;
                 }
                 else
                 {
@@ -501,10 +503,10 @@ bool Ant::interpret()
                 if(world()->hasFood(getX(), getY(), f))
                 {
                     int amtToEat;
-                    if(m_foodUnits >= 1400) //max is 1800
-                        amtToEat = 1800 - m_foodUnits;
+                    if(m_foodUnits >= Ant::MAX_FOOD_CARRY - Ant::ATTEMPT_TO_CARRY) //max is 1800
+                        amtToEat = Ant::MAX_FOOD_CARRY - m_foodUnits;
                     else
-                        amtToEat = 400;
+                        amtToEat = Ant::ATTEMPT_TO_CARRY;
                     
                     m_foodUnits += f->eat(amtToEat);
                 }
@@ -529,15 +531,18 @@ bool Ant::interpret()
             case Compiler::Opcode::generateRandomNumber:
                 m_lastRandomNumberGenerated = rand() % stoi(cmd.operand1);
                 ++m_ic;
+                shouldReturn = false;
                 break;
             case Compiler::Opcode::goto_command:
                 m_ic = stoi(cmd.operand1);
+                shouldReturn = false;
                 break;
             case Compiler::Opcode::if_command:
                 if (conditionIsTrue(cmd))//conditionIsTrue(cmd)
                     m_ic = stoi(cmd.operand2);
                 else
                     ++m_ic;
+                shouldReturn = false;
                 break;
             default:
                 ++m_ic;
@@ -552,14 +557,13 @@ bool Ant::interpret()
 //========[ Actor > EnergyHolder > Insect > Grasshopper ]======================
 //sets stuns = 0
 Grasshopper::Grasshopper(int id, StudentWorld *sw, int imageID, int startX, int startY, int health)
-        :Insect(id, sw, imageID, startX, startY, right, health, 0)
+        :Insect(id, sw, imageID, startX, startY, STARTING_DIR, health, 0)
 {
     setRandomDistance();
     setRandomDir();
-    m_bite = 0; //adult is 50
 }
 
-int Grasshopper::distance()
+int Grasshopper::distance() const
 {
     return m_distance;
 }
@@ -576,7 +580,7 @@ void Grasshopper::move()
         int x, y;
         getNextPos(x, y);
         
-        if(isBlocked(x, y))
+        if(world()->isBlocked(x, y))
         {
             m_distance = 0;
             stun();
@@ -609,16 +613,16 @@ BabyGrasshopper::BabyGrasshopper(int id, StudentWorld *sw, int startX, int start
 
 void BabyGrasshopper::doesAction()
 {
-    if(units() >= 1600)
+    if(units() >= BabyGrasshopper::MAX_HEALTH)
     {
         //create adult
         world()->spawnAdultGrasshopper(getX(), getY());
-        world()->addFood(getX(), getY(), 100);
+        world()->addFood(getX(), getY(), BabyGrasshopper::CARCASS_UNITS);
         killMe();
         return;
     }
     
-    if(attemptToEat(200))
+    if(attemptToEat(Grasshopper::ATTEMPT_TO_EAT))
     {
         int random = rand() % 2;
         if(random == 0){
@@ -654,23 +658,23 @@ void AdultGrasshopper::doesAction()
         EnergyHolder *e;
         if(world()->hasEnemy(getX(), getY(), -1, e))
         {
-            e->decreaseUnits(50);
+            e->decreaseUnits(AdultGrasshopper::BITE_STRENGTH);
         }
     }
     else if(randTen == 0) //0.1 chance
     {
         //select square in 10 square radius using cos(), sin()
-        int randRadius = rand() % 10 + 1;
+        int randRadius = rand() % AdultGrasshopper::MAX_JUMP_RADIUS + 1;
         int randRadians = (rand() % 360) * 3.1415926535 / 180;
         
         int x = getX() + randRadius * cos(randRadians);
         int y = getY() + randRadius * sin(randRadians);
         
         //move if within bounds and not blocked by rock
-        if(!isBlocked(x, y) && x > 0 && y > 0 && x < VIEW_WIDTH && y < VIEW_HEIGHT)
+        if(!world()->isBlocked(x, y) && x > 0 && y > 0 && x < VIEW_WIDTH && y < VIEW_HEIGHT)
             moveMeTo(x, y);
     }
-    else if(!(attemptToEat(200) && randTwo == 0))
+    else if(!(attemptToEat(Grasshopper::ATTEMPT_TO_EAT) && randTwo == 0))
     {
         //if attempt to eat failed or attempt to eat successed & 50% chance
         move();

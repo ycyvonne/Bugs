@@ -1,0 +1,310 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------|CS32 PROJECT 3|---------------------------------------------
+--------------------------------------------|    Report    |--------------------------------------------
+--------------------------------------------|  Yvonne Chen |--------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1. A high-level description of each of your public member functions in each of your classes, and why you chose to define each member function in its host class; also explain why (or why not) you decided to make each function virtual or pure virtual. 
+---------------------------------------------------------------------------------------------------------
+####Public Member Functions in Actor.h & Actor.cpp
+
+###Actor class
+
+#accessors
+int type() const 			//returns an enum to identify type of the class
+		     			//i.e. grasshopper, or rock, or pheromone
+
+int id() const   			//returns the id member var,
+		     			//for which each Actor has a unique one
+
+virtual bool const isInsect() 		//whether or not is insect
+			      	   	//is defined to return false 
+			          	//but is overriden to return true in Insect class
+			          	//which is why it's declared as virtual
+
+#mutators
+virtual void doSomething() 		//empty for now, will be overriden,
+					//since all derived classes need to call their own
+					//version of doSomething()
+
+---------------------------------------------------------------------------------------------------------
+###Pebble class 			//Actor > Pebble
+					//does not require additional functionality
+					//i.e. EnergyHolder
+					//so directly derived from actor
+
+#mutators
+virtual void doSomething()		//does nothing. is rock
+---------------------------------------------------------------------------------------------------------
+###EnergyHolder class			//Actor > EnergyHolder
+
+#accessors
+int units() const			//member var accessor, encapsulation
+					//prevent public member vars
+
+bool isDead() const			//compares units < 0, since same definition of death
+					//for all EnergyHolders
+
+StudentWorld* world() const		//member var accessor, encapsulation
+					//prevent public member vars
+
+
+#mutators
+void setUnits(int units)			//sets member var
+						//should only be initially called in constructor
+
+void addUnits(int units)			//increments units
+
+virtual void decreaseUnits(int units)		//decrements units
+						//virtual because expected to be overriden
+						//in ant class, which needs to track
+						//if bitten (which calls this function)
+---------------------------------------------------------------------------------------------------------
+###Food class				//Actor > EnergyHolder > Food
+
+#mutators
+virtual void doSomething()		//does nothing
+void addCarcass()			//calls base class addUnits()
+int eat(int amt)			//attempts to remove certain number of units
+					//will kill self if units <= 0
+---------------------------------------------------------------------------------------------------------
+###Pheromone class			//Actor > EnergyHolder > Pheromone
+
+virtual void doSomething()		//derived down, specializes by
+					//adding decrement unit & check death
+
+---------------------------------------------------------------------------------------------------------
+###Anthill class			//Actor > EnergyHolder > Anthill
+
+virtual void doSomething()		//anthill specific behavior such as spawn ant
+void spawnAnt()				//called by doSomething()
+
+---------------------------------------------------------------------------------------------------------
+###TriggerableActor class		//Actor > EnergyHolder > TriggerableActor
+					//no public functions
+
+---------------------------------------------------------------------------------------------------------
+###Pool class				//Actor > EnergyHolder > TriggerableActor > Pool
+
+virtual void doSomething()		//attempts to stun all
+
+---------------------------------------------------------------------------------------------------------
+###Poison class				//Actor > EnergyHolder > TriggerableActor > Poison
+
+virtual void doSomething()		//attempts to poison all
+
+---------------------------------------------------------------------------------------------------------
+###Insect class				//Actor > EnergyHolder > Insect
+
+
+#accessors
+virtual bool isInsect() const		//overriden to return true
+
+virtual bool isEnemy(int colony)	//meant to be overriden,
+					//since default is true (for all grasshoppers, lets say)
+					//and will be overriden in ant in accordance to colony #
+
+
+#mutators
+virtual void doSomething()		//defines majority of insect specific behavior
+					//further extensible actions are defined in doesAction()
+					//which is called within this function
+
+virtual void doesAction()		//meant to be overriden,
+					//as additional functionality after all checks are made
+					//checks were made in doSomething()
+					//that checked for death and stuns
+					//this method is meant to be unique behavior for subclasses
+
+void poison()				//decrements units (from base class EnergyHolder)
+void getHungrier()			//decrements units
+bool attemptToEat(int amt)		//increments units, and looks into world
+void stun()				//sets member stun var
+
+---------------------------------------------------------------------------------------------------------
+###Ant class				//Actor > EnergyHolder > Insect > Ant
+
+#accessors
+virtual bool isEnemy(int colony) const; 	//looks into world to ensure that ants on same square
+						//are of different colony to be enemy
+    
+#mutators
+virtual void doesAction();		//follows commands through interpreter
+virtual void decreaseUnits(int units);//overrides, to add on a flag variable wasBitten
+					//if number to be decreased is not 1
+
+---------------------------------------------------------------------------------------------------------
+###Grasshopper class			//Actor > EnergyHolder > Insect > Grasshopper
+
+#accessors
+int distance() const			//to keep track of how much distance is left
+
+#mutators
+virtual void doesAction()		//empty for now, meant to be overriden in specific 
+					//classes such as Baby and Adult
+
+virtual void move()			//handles change of direction according to
+					//its currently facing direction
+
+bool makeChecks()			//checks for distance change, and resets direction
+void setRandomDistance()
+
+---------------------------------------------------------------------------------------------------------
+###BabyGrasshopper			//Actor > EnergyHolder > Insect > Grasshopper > BabyGrasshopper
+
+virtual void doesAction()		//baby-specific actions
+					//i.e. molting / dying at health threshold
+					//Also handles moving still
+					//by calling inherited function move()
+
+---------------------------------------------------------------------------------------------------------
+###AdultGrasshopper			//Actor > EnergyHolder > Insect > Grasshopper > AdultGrasshopper
+
+virtual void doesAction()		//adult-specific actions
+					//i.e. jumping, biting, etc. 
+					//Also handles moving still
+					//by calling inherited function move()
+
+---------------------------------------------------------------------------------------------------------
+####Public Member Functions in StudentWorld.h & StudentWorld.cpp
+
+###StudentWorld class
+
+virtual int init();			//inserts all actors, parses all files
+virtual int move();			//iterates through data structure and call doSomething() on all
+virtual void cleanUp();		//called in destructor to ensure no memory leaks
+    
+void killActor(int id, int x, int y);	//removes actor from data structure
+void setFlag(int x, int y);		//sets a member var flag (when an actor dies, so that 
+					//iterator will know to reset)
+void resetFlag();			//resets after iterator resets
+
+//all self explanatory
+void spawnAdultGrasshopper(int x, int y);
+void spawnAnt(int x, int y, int colony, Compiler* com);	//will increment internal counter
+								//to keep track of which colonies
+								//produced more
+void spawnPheromone(int x, int y, int colony);
+    
+void stunAll(int x, int y);		//calls public method stun() on all viable insects
+void poisonAll(int x, int y);		//calls public method poison() on all viable insects
+    
+bool isBlocked(int x, int y);		//checks if type rock is present
+
+bool moveActor(int id, int xStart, int yStart, int xEnd, int yEnd); //inserts actor at new location
+									//removes actor at old location
+									//within the internal DS
+
+bool hasPheromone(int x, int y, int myColony); //checks to see if phereomone present
+    
+void addFood(int x, int y, int amt);	
+bool hasFood(int x, int y, Food*& a);	//if has food, a is set to point to the correct Food object
+bool hasEnemy(int x, int y, int colony, EnergyHolder*& a); 	//if has enemy, a is set to
+								// point to correct EnergyHolder object
+    
+bool winningAntExists();	//iterates through internal counters for how many ants produced
+				//from each colony
+				//to decide winner, when no duplicates
+
+std::string getWinnerName(int colony); 
+
+---------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2. A list of all functionality that you failed to finish as well as known bugs in your classes,
+e.g. “I didn’t implement the poison class.” or “My adult grasshopper doesn’t work
+correctly yet so I treat it like a baby grasshopper right now.”
+---------------------------------------------------------------------------------------------------------
+
+Everything seems to work, and I finished all functionality.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+3. A list of other design decisions and assumptions you made; e.g., “It was not specified what to do in situation X, so this is what I decided to do.”
+---------------------------------------------------------------------------------------------
+
+It wasn't specified that the coordinate system (0,0) started at the bottom left of the screen (rather than top left), so to account for that I made sure up was y++ and down was y--. Also tested to make sure counterclockwise and clockwise rotation (with ants) worked correctly.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+4. A description of how you tested each of your classes (1-2 paragraphs per class).
+---------------------------------------------------------------------------------------------------------
+###Actor class
+
+By itself, this class didn't handle much other than being correctly displayed. Also I generated a unique id for every actor in the simulation, so as long as ID-related methods worked, this worked too.
+
+###Pebble class
+
+Sat there. As long as it returned the correct x,y coords, and also had a correct type() function that was used to identify it, then insects would not walk over it. Tested by ensuring all insects would not go over the rock.
+
+###EnergyHolder class	
+
+Used to keep track of units, or "energy". Tested by ensuring certain derived classes (such as Ant, Grasshopper) would die at appropriate times. This ensures that setUnits() and decrementUnits() worked correctly. Also, if some insects did not die at it's tick count that corresponded to its initial health, than increaseUnits() due to eating works correctly too. I tested all this, and also included couts within each of the methods to ensure that units were correctly modified.
+
+Also, this class handles deletion when units <= 0.
+
+###Food class	
+
+Tested to make sure it was incremented when an insect died on top. Decremented / destroyed when an insect ate it. 
+
+###Pheromone class
+
+Made sure it trailed ants when they emitted, and that they died off at the appropriate tick time.
+
+###Anthill class
+
+Made sure initial ants spawned was 5, and played around with settings to ensure that more ants would be spawned when more food/health was dropped on it.
+
+###TriggerableActor class
+
+Not much functionality (more of an abstract class)
+
+###Pool class
+
+I modified the stun time to be longer, so I could see when insects stepped on them and actually stopped.
+
+###Poison class
+
+I modified the poison strength to be larger, so that I could see when insects stepped on top they would die immediately.
+
+###Insect class
+
+Tested a variety of things:
+Tested to make sure it could detect enemy (set bite strength to be large, so enemy would die immediately)
+Tested to make sure it would die appropriately (at correct tick according to initial health), be stunned appropriately, and move correctly according to directions. (I tested directions by manually setting them). Tested with Food/Poison/Water as stated above.
+
+###Ant class
+
+Ran program to ensure it displayed correctly, and moved as fast as it should (every tick, rather than every 3 ticks). Similar to testing for Insect class, repeat.
+
+###Grasshopper class
+
+Main unique thing here is that grasshoppers would move a random distance in a range / change direction, etc. I would cout the random #s generated to ensure they were in the correct range, and made sure all direction changes were correct.
+
+###BabyGrasshopper
+
+Main unique thing to test is that it would die at 1600 units, turn into food, and molt into an adult. I tested this by setting initial health to 1599, and seeing if this would happen the first time it stepped on food. Also ensured that food was dropped correctly by couting within a food member function.
+
+
+###AdultGrasshopper
+
+Main unique thing here is that they would bite and jump. Tested by running program, and seeing the grasshopper jump within a 10 unit radius. Also couted the random coordinates generated to ensure it was correct.
+
+###StudentWorld class
+
+Tested to make sure all actors were displayed correctly, that the data structure was updated correctly (couting parts of the contents of the data structure at specified points), ensured deletions worked when I didn't get BAD_ACESS errors. I ensured all the spawn methods (spawnAdultGrasshopper, spawnAnt, etc) worked by triggering them manually and setting the new actors appear on the display. 
+
+stunAll and poisonAll was tested in tandem with Pool and Poison classes. isBlocked tested with Pebble class. Food and enemy was harder to test for by looking at the simulation, so I just couted all the values to make sure it was incremented when it should be, and that enemies were appropriately detected by couting the colony number.
+
+I tested the endgame by setting one of anthill healths to a very large number, so that it would start off by producing a large number of ants. If this anthill won, then the endgame worked. I then tested in tie-game scenarios to ensure the program would detect those correctly.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
