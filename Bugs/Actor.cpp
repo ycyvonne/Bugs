@@ -15,6 +15,7 @@ Actor::Actor(int id, int imageID, int startX, int startY,
     m_id = id;
     m_type = imageID;
     setDirection(dir);
+    m_isDeleted = false;
 }
 
 int Actor::type() const{
@@ -23,6 +24,14 @@ int Actor::type() const{
 
 int Actor::id() const{
     return m_id;
+}
+
+bool Actor::isDeleted() const{
+    return m_isDeleted;
+}
+
+void Actor::deleteMe(){
+    m_isDeleted = true;
 }
 
 void Actor::setRandomDir()
@@ -105,9 +114,8 @@ void EnergyHolder::moveMeTo(int x, int y)
     //update world
     m_world->moveActor(id(), thisX, thisY, x, y);
 }
-
 void EnergyHolder::killMe()
-{
+{    
     //update display
     setVisible(false);
     
@@ -124,7 +132,7 @@ Pebble::Pebble(int id, int startX, int startY)
 //==============[ Actor > EnergyHolder > Food ]====================================
 
 Food::Food(int id, StudentWorld* sw, int startX, int startY, bool dueToDeath)
-    :EnergyHolder(id, sw, IID_FOOD, startX, startY, STARTING_DIR, 2)
+    :EnergyHolder(id, sw, IID_FOOD, startX, startY, right, 2)
 {
     if(dueToDeath)
         setUnits(Food::CARCASS_UNITS);
@@ -154,7 +162,7 @@ int Food::eat(int amt)
 //==============[ Actor > EnergyHolder > Pheromone ]====================================
 
 Pheromone::Pheromone(int id, StudentWorld* sw, int idType, int startX, int startY, int colony)
-    :EnergyHolder(id, sw, idType, startX, startY, STARTING_DIR, 2)
+    :EnergyHolder(id, sw, idType, startX, startY, right, 2)
 {
     setUnits(Pheromone::STARTING_UNITS);
     m_colony = colony;
@@ -170,7 +178,7 @@ void Pheromone::doSomething()
 
 
 Anthill::Anthill(int id, StudentWorld* sw, Compiler* com, int colony, int startX, int startY)
-    :EnergyHolder(id, sw, IID_ANT_HILL, startX, startY, STARTING_DIR, 2)
+    :EnergyHolder(id, sw, IID_ANT_HILL, startX, startY, right, 2)
 {
     m_colony = colony;
     m_compiler = com;
@@ -207,7 +215,7 @@ TriggerableActor::TriggerableActor(int id, StudentWorld* sw,
 //=====[ Actor > EnergyHolder > TriggerableActor > Pool ]============
 
 Pool::Pool(int id, StudentWorld* sw, int startX, int startY)
-    :TriggerableActor(id, sw, IID_WATER_POOL, startX, startY, STARTING_DIR, 2) {}
+    :TriggerableActor(id, sw, IID_WATER_POOL, startX, startY, right, 2) {}
 
 void Pool::doSomething()
 {
@@ -219,7 +227,7 @@ void Pool::doSomething()
 //=======[ Actor > EnergyHolder > TriggerableActor > Poison ]============
 
 Poison::Poison(int id, StudentWorld* sw, int startX, int startY)
-    :TriggerableActor(id, sw, IID_POISON, startX, startY, STARTING_DIR, 2)
+    :TriggerableActor(id, sw, IID_POISON, startX, startY, right, 2)
 {}
 
 void Poison::doSomething()
@@ -322,7 +330,7 @@ void Insect::getNextPos(int &nextX, int &nextY)
 //========[ Actor > EnergyHolder > Insect > Ant ]======================
 
 Ant::Ant(int id, StudentWorld *sw, Compiler *com, int imageID, int startX, int startY, int colony)
-    :Insect(id, sw, imageID, startX, startY, STARTING_DIR, 1500, 0)
+    :Insect(id, sw, imageID, startX, startY, right, 1500, 0)
 {
     setRandomDir();
     m_colony = colony;
@@ -557,7 +565,7 @@ bool Ant::interpret()
 //========[ Actor > EnergyHolder > Insect > Grasshopper ]======================
 //sets stuns = 0
 Grasshopper::Grasshopper(int id, StudentWorld *sw, int imageID, int startX, int startY, int health)
-        :Insect(id, sw, imageID, startX, startY, STARTING_DIR, health, 0)
+        :Insect(id, sw, imageID, startX, startY, right, health, 0)
 {
     setRandomDistance();
     setRandomDir();

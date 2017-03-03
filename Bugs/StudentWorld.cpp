@@ -6,7 +6,7 @@
 
 using namespace std;
 
-
+int counter = 0;
 GameWorld* createStudentWorld(string assetDir)
 {
 	return new StudentWorld(assetDir);
@@ -37,6 +37,8 @@ StudentWorld::~StudentWorld()
 
 void StudentWorld::cleanUp()
 {
+   // cout << "counter: " << counter << endl;
+    int lC = 0;
     for(int i = 0; i < VIEW_WIDTH; i++)
     {
         for(int j = 0; j < VIEW_HEIGHT; j++)
@@ -45,11 +47,15 @@ void StudentWorld::cleanUp()
             while(m_map.count(index) > 0)
             {
                 mmap::iterator it = m_map.find(index);
+                lC++;
                 delete it->second;
                 m_map.erase (it);
             }
         }
     }
+   // cout << "num expected: " << m_currentUniqueId << endl;
+   // cout<< "num actual: " << lC << endl;
+    //cout << "counter2: " << lC << endl;
 }
 
 int StudentWorld::init()
@@ -167,7 +173,8 @@ int StudentWorld::move()
                 int oldX = cur->getX();
                 int oldY = cur->getY();
                 
-                cur->doSomething();
+                if(!cur->isDeleted())
+                    cur->doSomething();
                 
                 int newX = cur->getX();
                 int newY = cur->getY();
@@ -221,7 +228,6 @@ void StudentWorld::killActor(int id, int x, int y)
     removeActor(true, id, x, y);
 }
 
-
 //if hardDelete, will delete Actor* at the location
 //else it is a soft delete, to move Actor* elsewhere
 void StudentWorld::removeActor(bool hardDelete, int id, int x, int y)
@@ -229,12 +235,15 @@ void StudentWorld::removeActor(bool hardDelete, int id, int x, int y)
     indexPair index (x, y);
     mmap::iterator it;
     for (it = m_map.equal_range(index).first; it != m_map.equal_range(index).second; ++it){
-        if(it->second->id() == id)
+        if(it->second->id() == id && !it->second->isDeleted())
         {
-            if(hardDelete)
-                delete it->second;
+            if(hardDelete){
+                it->second->deleteMe();
+                counter++;
+            }
+            else
+                m_map.erase(it);
             
-            m_map.erase(it);
             return;
         }
     }

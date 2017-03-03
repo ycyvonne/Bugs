@@ -7,14 +7,10 @@
 
 class StudentWorld;
 class Food;
-
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 
 class Actor: public GraphObject{
 public:
-    
-    //constants
-    const Direction STARTING_DIR = right;
     
     //constructor
     Actor(int id, int imageID, int startX, int startY, Direction dir, int depth);
@@ -23,10 +19,11 @@ public:
     int     type() const;       //according to IID
     int     id() const;         //from the unique ID produced at the start
     virtual bool isInsect() const {return false;}  //is biteable, stunnable, and poisonable
+    bool    isDeleted() const;
     
     //mutators
     virtual void doSomething() {}
-    
+    void    deleteMe();
     
 protected:
     void setRandomDir();
@@ -34,7 +31,7 @@ protected:
 private:
     int m_id;
     int m_type;
-    
+    bool m_isDeleted;
 };
 
 class Pebble: public Actor{
