@@ -190,6 +190,27 @@ int StudentWorld::move()
         }
     }
     
+    //hande deletions after moving
+    for(int i = 0; i < VIEW_WIDTH; i++)
+    {
+        for(int j = 0; j < VIEW_HEIGHT; j++)
+        {
+            indexPair index (i, j);
+            
+            mmap::iterator it = m_map.equal_range(index).first;
+            
+            while(it != m_map.equal_range(index).second){
+                if(it->second->isDeleted())
+                {
+                    delete it->second;
+                    it = m_map.erase(it);
+                }
+                else
+                    ++it;
+            }
+        }
+    }
+    
     setDisplayText();
     
     m_tickCount++;

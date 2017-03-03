@@ -172,6 +172,10 @@ virtual void doesAction()		//adult-specific actions
 
 virtual int init();			//inserts all actors, parses all files
 virtual int move();			//iterates through data structure and call doSomething() on all
+					//then deletes dead actors
+					//sets display text
+					//checks for endgame scenario
+
 virtual void cleanUp();		//called in destructor to ensure no memory leaks
     
 void killActor(int id, int x, int y);	//removes actor from data structure
