@@ -3,6 +3,7 @@
 
 #include "GameWorld.h"
 #include "GameConstants.h"
+#include "Compiler.h"
 #include "Actor.h"
 #include <string>
 #include <map>
@@ -58,6 +59,7 @@ private:
     
     std::vector<std::string> m_colonyNames;
     std::vector<int> m_colonyAntCount;
+    std::vector<Compiler*> m_compilers;
     
     //helper functions
     void removeActor(bool hardDelete, int id, int x, int y);

@@ -1,12 +1,11 @@
 #include "StudentWorld.h"
 #include "Field.h"
 #include "Actor.h"
-#include "Compiler.h"
+//#include "Compiler.h"
 #include <string>
 
 using namespace std;
 
-int counter = 0;
 GameWorld* createStudentWorld(string assetDir)
 {
 	return new StudentWorld(assetDir);
@@ -33,12 +32,13 @@ void StudentWorld::resetFlag()
 StudentWorld::~StudentWorld()
 {
     cleanUp();
+    
+    for(int i = 0; i < m_compilers.size(); i++)
+        delete m_compilers[i];
 }
 
 void StudentWorld::cleanUp()
 {
-   // cout << "counter: " << counter << endl;
-    int lC = 0;
     for(int i = 0; i < VIEW_WIDTH; i++)
     {
         for(int j = 0; j < VIEW_HEIGHT; j++)
@@ -47,15 +47,12 @@ void StudentWorld::cleanUp()
             while(m_map.count(index) > 0)
             {
                 mmap::iterator it = m_map.find(index);
-                lC++;
                 delete it->second;
                 m_map.erase (it);
             }
         }
     }
-   // cout << "num expected: " << m_currentUniqueId << endl;
-   // cout<< "num actual: " << lC << endl;
-    //cout << "counter2: " << lC << endl;
+
 }
 
 int StudentWorld::init()
@@ -74,20 +71,19 @@ int StudentWorld::init()
     
     vector<string> files = getFilenamesOfAntPrograms();
     
-    Compiler* compilers[files.size()];
     string cError;
     
     for(int i = 0; i < files.size(); i++)
     {
-        compilers[i] = new Compiler;
-        if (!compilers[i]->compile(files[i], cError))
+        m_compilers.push_back(new Compiler);
+        if (!m_compilers[i]->compile(files[i], cError))
         {
             setError(files[i] + " " + cError);
             return GWSTATUS_LEVEL_ERROR;
         }
 
         m_colonyAntCount.push_back(0);
-        m_colonyNames.push_back(compilers[i]->getColonyName());
+        m_colonyNames.push_back(m_compilers[i]->getColonyName());
     }
     
     for(int i = 0; i < VIEW_WIDTH; i++)
@@ -133,9 +129,10 @@ int StudentWorld::init()
             }
             
             if(anthill != -1 && anthill < files.size())
-                m_map.insert(mmapPair(index, new Anthill(m_currentUniqueId++, this, compilers[anthill], anthill, i, j)));
+                m_map.insert(mmapPair(index, new Anthill(m_currentUniqueId++, this, m_compilers[anthill], anthill, i, j)));
         }
     }
+    
     
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -239,7 +236,6 @@ void StudentWorld::removeActor(bool hardDelete, int id, int x, int y)
         {
             if(hardDelete){
                 it->second->deleteMe();
-                counter++;
             }
             else
                 m_map.erase(it);
