@@ -68,10 +68,10 @@ int StudentWorld::init()
     
     vector<string> files = getFilenamesOfAntPrograms();
     
-    Compiler* compilers[4];
+    Compiler* compilers[files.size()];
     string cError;
     
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < files.size(); i++)
     {
         compilers[i] = new Compiler;
         if (!compilers[i]->compile(files[i], cError))
@@ -126,7 +126,7 @@ int StudentWorld::init()
                     break;
             }
             
-            if(anthill != -1)
+            if(anthill != -1 && anthill < files.size())
                 m_map.insert(mmapPair(index, new Anthill(m_currentUniqueId++, this, compilers[anthill], anthill, i, j)));
         }
     }
